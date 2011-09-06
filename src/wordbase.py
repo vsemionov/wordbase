@@ -82,5 +82,11 @@ def main():
         config = configparser.ConfigParser()
         config.read_file(conf, conf_path)
 
+    if daemon:
+        raise NotImplementedError("daemon mode is not implemented")
 
-main()
+
+try:
+    main()
+except Exception as ex:
+    print(ex, file=sys.stderr)
