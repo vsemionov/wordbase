@@ -1,3 +1,5 @@
+#/usr/bin/env python3
+
 # Copyright (C) 2011 Victor Semionov
 # All rights reserved.
 # 
@@ -22,3 +24,57 @@
 # CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
 # OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+
+
+import sys
+import os
+import getopt
+
+
+PROGRAM_NAME = "wordbase"
+
+
+_usage_help = \
+"""usage: {name} [-d] [conf_file]
+
+options:
+ -d    daemon mode
+
+arguments:
+ conf  path to configuration file"""
+
+
+def get_default_conf_path():
+    conf_filename = PROGRAM_NAME + ".conf"
+    script_dir = os.path.abspath(__file__)
+    default_conf_path = os.path.join(script_dir, conf_filename)
+    return default_conf_path
+
+def usage():
+    print(_usage_help.format(name=PROGRAM_NAME), file=sys.stderr)
+
+def main():
+    daemon = False
+
+    try:
+        opts, args = getopt.getopt(sys.argv[1:], "d")
+    except getopt.GetoptError:
+        usage()
+        sys.exit(2)
+
+    for opt, arg in opts:
+        if opt == "-d":
+            daemon = True
+        else:
+            assert False, "unhandled option"
+
+    if len(args) == 1:
+        conf_path = args[0]
+    elif len(args) == 0:
+        conf_path = get_default_conf_path()
+    else:
+        usage()
+        sys.exit(2)
+
+
+main()
