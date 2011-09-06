@@ -33,7 +33,12 @@ import configparser
 
 
 PROGRAM_NAME = "wordbase"
+PROGRAM_VERSION = "0.1"
 
+
+_version_info = \
+"""{name} {version}
+Copyright (C) 2011 Victor Semionov"""
 
 _usage_help = \
 """usage: {name} [-d] [conf_file]
@@ -52,21 +57,30 @@ def get_default_conf_path():
     default_conf_path = os.path.join(script_dir, conf_filename)
     return default_conf_path
 
-def usage():
-    print(_usage_help.format(name=PROGRAM_NAME), file=sys.stderr)
+def print_usage():
+    print(_usage_help.format(name=PROGRAM_NAME))
+
+def print_version():
+    print(_version_info.format(name=PROGRAM_NAME, version=PROGRAM_VERSION))
 
 def main():
     daemon = False
 
     try:
-        opts, args = getopt.getopt(sys.argv[1:], "d")
+        opts, args = getopt.getopt(sys.argv[1:], "dhv")
     except getopt.GetoptError:
-        usage()
+        usage(sys.stderr)
         sys.exit(2)
 
     for opt, arg in opts:
         if opt == "-d":
             daemon = True
+        elif opt == "-h":
+            print_usage()
+            return
+        elif opt == "-v":
+            print_version()
+            return
         else:
             assert False, "unhandled option"
 
@@ -75,7 +89,7 @@ def main():
     elif len(args) == 0:
         conf_path = get_default_conf_path()
     else:
-        usage()
+        print_usage()
         sys.exit(2)
 
     with open(conf_path) as conf:
