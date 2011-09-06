@@ -29,6 +29,7 @@
 import sys
 import os
 import getopt
+import configparser
 
 
 PROGRAM_NAME = "wordbase"
@@ -46,7 +47,8 @@ arguments:
 
 def get_default_conf_path():
     conf_filename = PROGRAM_NAME + ".conf"
-    script_dir = os.path.abspath(__file__)
+    script_path = os.path.abspath(__file__)
+    script_dir = os.path.dirname(script_path)
     default_conf_path = os.path.join(script_dir, conf_filename)
     return default_conf_path
 
@@ -75,6 +77,10 @@ def main():
     else:
         usage()
         sys.exit(2)
+
+    with open(conf_path) as conf:
+        config = configparser.ConfigParser()
+        config.read_file(conf, conf_path)
 
 
 main()
