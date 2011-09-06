@@ -90,3 +90,4 @@ try:
     main()
 except Exception as ex:
     print(ex, file=sys.stderr)
+    sys.exit(1)
