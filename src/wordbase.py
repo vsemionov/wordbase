@@ -49,6 +49,8 @@ options:
 arguments:
  conf  path to configuration file"""
 
+_help_hint = "Try '{name} -h' for more information."
+
 
 def get_default_conf_path():
     conf_filename = PROGRAM_NAME + ".conf"
@@ -63,13 +65,17 @@ def print_usage():
 def print_version():
     print(_version_info.format(name=PROGRAM_NAME, version=PROGRAM_VERSION))
 
+def print_help_hint():
+    print(_help_hint.format(name=PROGRAM_NAME), file=sys.stderr)
+
 def main():
     daemon = False
 
     try:
         opts, args = getopt.getopt(sys.argv[1:], "dhv")
-    except getopt.GetoptError:
-        usage(sys.stderr)
+    except getopt.GetoptError as ge:
+        print(ge, file=sys.stderr)
+        print_help_hint()
         sys.exit(2)
 
     for opt, arg in opts:
@@ -89,7 +95,8 @@ def main():
     elif len(args) == 0:
         conf_path = get_default_conf_path()
     else:
-        print_usage()
+        print("mone than one argument specified", file=sys.stderr)
+        print_help_hint()
         sys.exit(2)
 
     with open(conf_path) as conf:
