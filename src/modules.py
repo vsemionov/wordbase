@@ -30,7 +30,7 @@ log = None
 
 
 def _init_module(config, mtype, *args):
-    modules_conf = config[__name__]
+    modules_conf = config["modules"]
     mname = modules_conf[mtype]
     mconf = config[mname]
     fullname = mtype + "." + mname
