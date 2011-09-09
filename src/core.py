@@ -24,18 +24,6 @@
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 
-import sys
-import os
-
-
-log = None
-
-
-def configure(config, log):
-    sys.modules[__name__].log = log
-
-def process(task, *args):
-    pid = os.fork()
-    if pid == 0:
-        task(*args)
-        sys.exit()
+def handle_client(sock, addr):
+    with sock:
+        pass

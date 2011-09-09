@@ -32,6 +32,7 @@ import getopt
 import configparser
 
 import modules
+import master
 
 
 PROGRAM_NAME = "wordbase"
@@ -70,6 +71,15 @@ def print_version():
 def print_help_hint():
     print(_help_hint.format(name=PROGRAM_NAME), file=sys.stderr)
 
+def start_server(address, backlog, timeout, daemon_mode):
+    args = (address, backlog, timeout, modules.mp)
+    if daemon_mode:
+        import daemon
+        with daemon.DaemonContext():
+            master.run(*args)
+    else:
+        master.run(*args)
+
 def main():
     daemon = False
 
@@ -81,6 +91,7 @@ def main():
         sys.exit(2)
 
     for opt, arg in opts:
+        del arg
         if opt == "-d":
             daemon = True
         elif opt == "-h":
@@ -107,9 +118,13 @@ def main():
 
     modules.init(config)
 
+    wbconfig = config["wordbase"]
+    host = wbconfig["host"]
+    port = int(wbconfig["port"])
+    backlog = int(wbconfig["backlog"])
+    timeout = int(wbconfig["timeout"])
+    address = (host, port)
+    start_server(address, backlog, timeout, daemon)
 
-try:
-    main()
-except Exception as ex:
-    print("{}: {}".format(ex.__class__.__name__, ex), file=sys.stderr)
-    sys.exit(1)
+
+main()

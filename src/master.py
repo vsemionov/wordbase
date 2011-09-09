@@ -24,18 +24,19 @@
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 
-import sys
-import os
+import socket
+
+import core
 
 
-log = None
+def accept_connections(sock, timeout, mp):
+    while True:
+        conn, addr = sock.accept()
+        conn.settimeout(timeout)
+        mp.process(core.handle_client, conn, addr)
 
-
-def configure(config, log):
-    sys.modules[__name__].log = log
-
-def process(task, *args):
-    pid = os.fork()
-    if pid == 0:
-        task(*args)
-        sys.exit()
+def run(address, backlog, timeout, mp):
+    sock = socket.socket()
+    sock.bind(address)
+    sock.listen(backlog)
+    accept_connections(sock, timeout, mp)

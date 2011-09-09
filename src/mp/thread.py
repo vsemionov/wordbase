@@ -25,7 +25,7 @@
 
 
 import sys
-import os
+import threading
 
 
 log = None
@@ -35,7 +35,4 @@ def configure(config, log):
     sys.modules[__name__].log = log
 
 def process(task, *args):
-    pid = os.fork()
-    if pid == 0:
-        task(*args)
-        sys.exit()
+    threading.Thread(target=task, args=args).start()

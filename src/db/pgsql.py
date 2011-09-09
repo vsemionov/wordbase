@@ -24,5 +24,11 @@
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 
-def configure(config):
-    pass
+import sys
+
+
+log = None
+
+
+def configure(config, log):
+    sys.modules[__name__].log = log

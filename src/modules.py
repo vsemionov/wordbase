@@ -24,16 +24,23 @@
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 
-TYPES = ("mp", "db", "log")
+mp = None
+db = None
+log = None
 
-modules = {}
+
+def _init_module(config, mtype, *args):
+    modules_conf = config[__name__]
+    mname = modules_conf[mtype]
+    mconf = config[mname]
+    fullname = mtype + "." + mname
+    pkg = __import__(fullname)
+    mod = getattr(pkg, mname)
+    mod.configure(mconf, *args)
+    return mod
 
 def init(config):
-    modules_conf = config[__name__]
-    for mtype in TYPES:
-        mname = modules_conf[mtype]
-        mconf = config[mname]
-        fullname = mtype + "." + mname
-        pkg = __import__(fullname)
-        mod = modules[mtype] = getattr(pkg, mname)
-        mod.configure(mconf)
+    global mp, log, db
+    log = _init_module(config, "log")
+    mp = _init_module(config, "mp", log)
+    db = _init_module(config, "db", log)
