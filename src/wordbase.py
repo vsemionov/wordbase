@@ -110,5 +110,5 @@ def main():
 try:
     main()
 except Exception as ex:
-    print(ex, file=sys.stderr)
+    print("{}: {}".format(ex.__class__.__name__, ex), file=sys.stderr)
     sys.exit(1)
