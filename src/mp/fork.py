@@ -34,8 +34,12 @@ log = None
 def configure(config, log):
     sys.modules[__name__].log = log
 
-def process(task, *args):
+def process(task, sock, addr, *args):
     pid = os.fork()
     if pid == 0:
-        task(*args)
+        task(sock, addr, *args)
         sys.exit()
+    else:
+        sock.close()
+
+#TODO: collect zombies on SIGCHLD

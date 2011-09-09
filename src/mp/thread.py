@@ -34,5 +34,5 @@ log = None
 def configure(config, log):
     sys.modules[__name__].log = log
 
-def process(task, *args):
-    threading.Thread(target=task, args=args).start()
+def process(task, sock, addr, *args):
+    threading.Thread(target=task, args = (sock, addr) + args).start()
