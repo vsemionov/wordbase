@@ -127,4 +127,8 @@ def main():
     start_server(address, backlog, timeout, daemon)
 
 
-main()
+try:
+    main()
+except Exception as ex:
+    print("{}: {}".format(ex.__class__.__name__, ex), file=sys.stderr)
+    sys.exit(1)
