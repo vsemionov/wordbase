@@ -108,7 +108,7 @@ def main():
     elif len(args) == 0:
         conf_path = get_default_conf_path()
     else:
-        print("mone than one argument specified", file=sys.stderr)
+        print("more than one argument specified", file=sys.stderr)
         print_help_hint()
         sys.exit(2)
 
