@@ -31,6 +31,8 @@ import os
 import getopt
 import configparser
 
+import modules
+
 
 PROGRAM_NAME = "wordbase"
 PROGRAM_VERSION = "0.1"
@@ -103,8 +105,7 @@ def main():
         config = configparser.ConfigParser()
         config.read_file(conf, conf_path)
 
-    if daemon:
-        raise NotImplementedError("daemon mode is not implemented")
+    modules.init(config)
 
 
 try:

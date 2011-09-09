@@ -22,3 +22,18 @@
 # CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
 # OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+
+
+TYPES = ("mp", "db", "log")
+
+modules = {}
+
+def init(config):
+    modules_conf = config[__name__]
+    for mtype in TYPES:
+        mname = modules_conf[mtype]
+        mconf = config[mname]
+        fullname = mtype + "." + mname
+        pkg = __import__(fullname)
+        mod = modules[mtype] = getattr(pkg, mname)
+        mod.configure(mconf)
