@@ -26,13 +26,18 @@
 
 import sys
 import os
+import signal
 
 
 log = None
 
 
+def _sigchld_handler(signum, frame):
+    os.waitpid(-1, os.WNOHANG)
+
 def configure(config, log):
     sys.modules[__name__].log = log
+    signal.signal(signal.SIGCHLD, _sigchld_handler)
 
 def process(task, sock, addr, *args):
     pid = os.fork()
@@ -41,5 +46,3 @@ def process(task, sock, addr, *args):
         sys.exit()
     else:
         sock.close()
-
-#TODO: collect zombies on SIGCHLD

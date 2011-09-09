@@ -25,18 +25,24 @@
 
 
 import socket
+import errno
 
 import core
 
 
 def accept_connections(sock, timeout, mp):
     while True:
-        conn, addr = sock.accept()
-        conn.settimeout(timeout)
-        mp.process(core.handle_client, conn, addr)
+        try:
+            conn, addr = sock.accept()
+            conn.settimeout(timeout)
+            mp.process(core.handle_client, conn, addr)
+        except IOError as ioe:
+            if ioe.errno != errno.EINTR:
+                raise
 
 def run(address, backlog, timeout, mp):
     sock = socket.socket()
+    sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
     sock.bind(address)
     sock.listen(backlog)
     accept_connections(sock, timeout, mp)
