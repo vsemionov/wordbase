@@ -24,8 +24,10 @@
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 
+import sys
 import os
 import socket
+import signal
 import errno
 import logging
 
@@ -35,27 +37,41 @@ import core
 logger = logging.getLogger(__name__)
 
 
+def _sigterm_handler(signum, frame):
+    logger.info("Caught SIGTERM, terminating")
+    sys.exit()
+
 def accept_connections(sock, timeout, mp):
     logger.info("Waiting for connections")
+
     while True:
         try:
             conn, addr = sock.accept()
+
             host, port = addr
             logger.debug("Accepted connection from address %s:%d", host, port)
+
             conn.settimeout(timeout)
+
             mp.process(core.process_session, conn, addr)
         except IOError as ioe:
             if ioe.errno != errno.EINTR:
                 raise
 
-def run(pid, address, backlog, timeout, mp):
+def run(address, backlog, timeout, mp):
     logger.info("Server starting")
+
+    signal.signal(signal.SIGTERM, _sigterm_handler)
+
     sock = socket.socket()
     sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
     sock.bind(address)
     sock.listen(backlog)
+
     host, port = address
     logger.info("Listening on address %s:%d", host, port)
+
+    pid = os.getpid()
     try:
         accept_connections(sock, timeout, mp)
     finally:

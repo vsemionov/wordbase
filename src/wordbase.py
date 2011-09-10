@@ -27,7 +27,6 @@
 
 
 import sys
-import os
 import getopt
 import configparser
 #import logging
@@ -102,14 +101,13 @@ def server_control(config, daemon_cmd):
     if daemon_cmd in (None, start_cmd, restart_cmd):
         modules.init(config)
 
-        pid = os.getpid()
         host = wbconfig["host"]
         port = int(wbconfig["port"])
         backlog = int(wbconfig["backlog"])
         timeout = int(wbconfig["timeout"])
         address = (host, port)
 
-        wbdaemon.run_args = (pid, address, backlog, timeout, modules.mp)
+        wbdaemon.run_args = (address, backlog, timeout, modules.mp)
 
         if daemon_cmd == start_cmd:
             control_func = wbdaemon.start
