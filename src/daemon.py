@@ -43,15 +43,15 @@ class Daemon:
 		atexit.register(self.delpid)
 
 		pid = str(os.getpid())
-		with open(self.pidfile,'w+') as f:
+		with open(self.pidfile,'w') as f:
 			f.write(pid + '\n')
 
 		# redirect standard file descriptors
 		sys.stdout.flush()
 		sys.stderr.flush()
 		si = open(os.devnull, 'r')
-		so = open(os.devnull, 'a+')
-		se = open(os.devnull, 'a+')
+		so = open(os.devnull, 'w')
+		se = open(os.devnull, 'w')
 
 		os.dup2(si.fileno(), sys.stdin.fileno())
 		os.dup2(so.fileno(), sys.stdout.fileno())
