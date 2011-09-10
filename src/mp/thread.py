@@ -24,15 +24,11 @@
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 
-import sys
 import threading
 
 
-log = None
-
-
-def configure(config, log):
-    sys.modules[__name__].log = log
+def configure(config):
+    pass
 
 def process(task, sock, addr, *args):
     thr = threading.Thread(target=task, args = (sock, addr) + args)

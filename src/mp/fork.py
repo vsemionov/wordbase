@@ -24,19 +24,14 @@
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 
-import sys
 import os
 import signal
-
-
-log = None
 
 
 def _sigchld_handler(signum, frame):
     os.waitpid(-1, os.WNOHANG)
 
-def configure(config, log):
-    sys.modules[__name__].log = log
+def configure(config):
     signal.signal(signal.SIGCHLD, _sigchld_handler)
 
 def process(task, sock, addr, *args):

@@ -26,7 +26,6 @@
 
 mp = None
 db = None
-log = None
 
 
 def _init_module(config, mtype, *args):
@@ -40,7 +39,6 @@ def _init_module(config, mtype, *args):
     return mod
 
 def init(config):
-    global mp, log, db
-    log = _init_module(config, "log")
-    mp = _init_module(config, "mp", log)
-    db = _init_module(config, "db", log)
+    global mp, db
+    mp = _init_module(config, "mp")
+    db = _init_module(config, "db")
