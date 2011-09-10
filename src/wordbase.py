@@ -169,6 +169,8 @@ def main():
 
 try:
     main()
+except KeyboardInterrupt:
+    pass
 except Exception as ex:
     if not debug_mode:
         print("{}: {}".format(ex.__class__.__name__, ex), file=sys.stderr)
