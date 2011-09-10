@@ -164,7 +164,7 @@ def main():
     if pidfile is None:
         pidfile = get_default_pidfile()
 
-    logging.raiseExceptions = False
+    #logging.raiseExceptions = False
     logging.config.fileConfig(conf_path)
 
     global logger
