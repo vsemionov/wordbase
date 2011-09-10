@@ -36,4 +36,5 @@ def configure(config, log):
 
 def process(task, sock, addr, *args):
     thr = threading.Thread(target=task, args = (sock, addr) + args)
+    thr.daemon = True
     thr.start()
