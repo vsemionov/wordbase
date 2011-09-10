@@ -2,13 +2,15 @@
 
 import sys, os, time, atexit, signal
 
-class daemon:
+class Daemon:
 	"""A generic daemon class.
 
 	Usage: subclass the daemon class and override the run() method."""
 
-	def __init__(self, pidfile): self.pidfile = pidfile
-	
+	def __init__(self, name, pidfile):
+		self.name = name
+		self.pidfile = pidfile
+
 	def daemonize(self):
 		"""Deamonize class. UNIX double fork mechanism."""
 
@@ -20,12 +22,12 @@ class daemon:
 		except OSError as err: 
 			sys.stderr.write('fork #1 failed: {0}\n'.format(err))
 			sys.exit(1)
-	
+
 		# decouple from parent environment
 		os.chdir('/') 
 		os.setsid() 
 		os.umask(0) 
-	
+
 		# do second fork
 		try: 
 			pid = os.fork() 
@@ -36,7 +38,14 @@ class daemon:
 		except OSError as err: 
 			sys.stderr.write('fork #2 failed: {0}\n'.format(err))
 			sys.exit(1) 
-	
+
+		# write pidfile
+		atexit.register(self.delpid)
+
+		pid = str(os.getpid())
+		with open(self.pidfile,'w+') as f:
+			f.write(pid + '\n')
+
 		# redirect standard file descriptors
 		sys.stdout.flush()
 		sys.stderr.flush()
@@ -47,16 +56,10 @@ class daemon:
 		os.dup2(si.fileno(), sys.stdin.fileno())
 		os.dup2(so.fileno(), sys.stdout.fileno())
 		os.dup2(se.fileno(), sys.stderr.fileno())
-	
-		# write pidfile
-		atexit.register(self.delpid)
 
-		pid = str(os.getpid())
-		with open(self.pidfile,'w+') as f:
-			f.write(pid + '\n')
-	
 	def delpid(self):
-		os.remove(self.pidfile)
+		if os.path.exists(self.pidfile):
+			os.remove(self.pidfile)
 
 	def start(self):
 		"""Start the daemon."""
@@ -68,13 +71,13 @@ class daemon:
 				pid = int(pf.read().strip())
 		except IOError:
 			pid = None
-	
+
 		if pid:
-			message = "pidfile {0} already exist. " + \
-					"Daemon already running?\n"
-			sys.stderr.write(message.format(self.pidfile))
+			message = "pidfile {0} already exists. " + \
+					"{1} already running?\n"
+			sys.stderr.write(message.format(self.pidfile, self.name))
 			sys.exit(1)
-		
+
 		# Start the daemon
 		self.daemonize()
 		self.run()
@@ -88,11 +91,11 @@ class daemon:
 				pid = int(pf.read().strip())
 		except IOError:
 			pid = None
-	
+
 		if not pid:
 			message = "pidfile {0} does not exist. " + \
-					"Daemon not running?\n"
-			sys.stderr.write(message.format(self.pidfile))
+					"{1} not running?\n"
+			sys.stderr.write(message.format(self.pidfile, self.name))
 			return # not an error in a restart
 
 		# Try killing the daemon process	
@@ -116,7 +119,7 @@ class daemon:
 
 	def run(self):
 		"""You should override this method when you subclass Daemon.
-		
+
 		It will be called after the process has been daemonized by 
 		start() or restart()."""
 

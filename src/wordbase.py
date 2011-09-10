@@ -64,9 +64,9 @@ Daemon control commands:
 help_hint = "Try '{name} -h' for more information."
 
 
-class WBDaemon(daemon.daemon):
-    def __init__(self, pidfile, *args):
-        super().__init__(pidfile)
+class WBDaemon(daemon.Daemon):
+    def __init__(self, name, pidfile, *args):
+        super().__init__(name, pidfile)
         self.run_args = args
 
     def run(self):
@@ -93,7 +93,7 @@ def server_control(config, daemon_cmd, pidfile):
     stop_cmd = "stop"
     restart_cmd = "restart"
 
-    wbdaemon = WBDaemon(pidfile)
+    wbdaemon = WBDaemon(PROGRAM_NAME, pidfile)
     command_func = None
 
     if daemon_cmd in (None, start_cmd, restart_cmd):
