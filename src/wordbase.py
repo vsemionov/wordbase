@@ -29,6 +29,8 @@
 import sys
 import getopt
 import configparser
+import logging
+import logging.config
 
 import modules
 import master
@@ -39,14 +41,14 @@ PROGRAM_NAME = "wordbase"
 PROGRAM_VERSION = "0.1"
 
 
-debug_mode = False
+logger = None
 
 version_info = \
 """{name} {version}
 Copyright (C) 2011 Victor Semionov"""
 
 usage_help = \
-"""Usage: {name} [-f conf_file] [-p pidfile] [-d command] [-D]
+"""Usage: {name} [-f conf_file] [-p pidfile] [-d command]
 
 Options:
  -v            print version information and exit
@@ -54,7 +56,6 @@ Options:
  -c conf_file  read the specified configuration file
  -p pidfile    use the specified process id file in deamon mode
  -d            daemon mode
- -D            debug mode
 
 Daemon control commands:
  start         start daemon
@@ -131,7 +132,7 @@ def main():
     daemon = None
 
     try:
-        opts, args = getopt.getopt(sys.argv[1:], "vhc:p:d:D")
+        opts, args = getopt.getopt(sys.argv[1:], "vhc:p:d:")
     except getopt.GetoptError as ge:
         print(ge, file=sys.stderr)
         print_help_hint()
@@ -155,9 +156,6 @@ def main():
             pidfile = arg
         elif opt == "-d":
             daemon = arg
-        elif opt == "-D":
-            global debug_mode
-            debug_mode = True
         else:
             assert False, "unhandled option"
 
@@ -165,6 +163,12 @@ def main():
         conf_path = get_default_conf_path()
     if pidfile is None:
         pidfile = get_default_pidfile()
+
+    logging.raiseExceptions = False
+    logging.config.fileConfig(conf_path)
+
+    global logger
+    logger = logging.getLogger(PROGRAM_NAME)
 
     with open(conf_path) as conf:
         config = configparser.ConfigParser()
@@ -178,8 +182,6 @@ try:
 except KeyboardInterrupt:
     pass
 except Exception as ex:
-    if not debug_mode:
-        print("{}: {}".format(ex.__class__.__name__, ex), file=sys.stderr)
-        sys.exit(1)
-    else:
-        raise
+    print("{}: {}".format(ex.__class__.__name__, ex), file=sys.stderr)
+    if logger: logger.exception("Terminating on unhandled exception:")
+    sys.exit(1)
