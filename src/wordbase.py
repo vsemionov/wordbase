@@ -94,7 +94,7 @@ def server_control(config, daemon_cmd, pidfile):
     restart_cmd = "restart"
 
     wbdaemon = WBDaemon(PROGRAM_NAME, pidfile)
-    command_func = None
+    control_func = None
 
     if daemon_cmd in (None, start_cmd, restart_cmd):
         modules.init(config)
@@ -109,19 +109,19 @@ def server_control(config, daemon_cmd, pidfile):
         wbdaemon.run_args = (address, backlog, timeout, modules.mp)
 
         if daemon_cmd == start_cmd:
-            command_func = wbdaemon.start
+            control_func = wbdaemon.start
         elif daemon_cmd == restart_cmd:
-            command_func = wbdaemon.restart
+            control_func = wbdaemon.restart
         elif daemon_cmd is None:
-            command_func = wbdaemon.run
+            control_func = wbdaemon.run
         else:
             assert False, "unhandled command"
     elif daemon_cmd == stop_cmd:
-        command_func = wbdaemon.stop
+        control_func = wbdaemon.stop
     else:
         assert False, "unhandled command"
 
-    command_func()
+    control_func()
 
 def main():
     conf_path = None
