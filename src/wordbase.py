@@ -27,7 +27,6 @@
 
 
 import sys
-import os
 import getopt
 import configparser
 
@@ -40,12 +39,14 @@ PROGRAM_NAME = "wordbase"
 PROGRAM_VERSION = "0.1"
 
 
+debug_mode = False
+
 version_info = \
 """{name} {version}
 Copyright (C) 2011 Victor Semionov"""
 
 usage_help = \
-"""Usage: {name} [-f conf_file] [-d command]
+"""Usage: {name} [-f conf_file] [-p pidfile] [-d command] [-D]
 
 Options:
  -v            print version information and exit
@@ -53,6 +54,7 @@ Options:
  -c conf_file  read the specified configuration file
  -p pidfile    use the specified process id file in deamon mode
  -d            daemon mode
+ -D            debug mode
 
 Daemon control commands:
  start         start daemon
@@ -127,7 +129,8 @@ def main():
     daemon = None
 
     try:
-        opts, args = getopt.getopt(sys.argv[1:], "vhc:p:d:")
+        opts, args = getopt.getopt(sys.argv[1:], "vhc:p:d:D")
+        del args
     except getopt.GetoptError as ge:
         print(ge, file=sys.stderr)
         print_help_hint()
@@ -146,6 +149,9 @@ def main():
             pidfile = arg
         elif opt == "-d":
             daemon = arg
+        elif opt == "-D":
+            global debug_mode
+            debug_mode = True
         else:
             assert False, "unhandled option"
 
@@ -164,8 +170,8 @@ def main():
 try:
     main()
 except Exception as ex:
-    if __file__.endswith(".py"):
-        raise
-    else:
+    if not debug_mode:
         print("{}: {}".format(ex.__class__.__name__, ex), file=sys.stderr)
         sys.exit(1)
+    else:
+        raise
