@@ -130,9 +130,13 @@ def main():
 
     try:
         opts, args = getopt.getopt(sys.argv[1:], "vhc:p:d:D")
-        del args
     except getopt.GetoptError as ge:
         print(ge, file=sys.stderr)
+        print_help_hint()
+        sys.exit(2)
+
+    if len(args):
+        print("excess argument(s)", file=sys.stderr)
         print_help_hint()
         sys.exit(2)
 
