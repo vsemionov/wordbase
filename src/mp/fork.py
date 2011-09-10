@@ -35,7 +35,8 @@ logger = logging.getLogger(__name__)
 
 def _sigchld_handler(signum, frame):
     logger.debug("Caught SIGCHLD, waiting for status")
-    pid = os.waitpid(-1, os.WNOHANG)
+    pid, status = os.waitpid(-1, os.WNOHANG)
+    del status
     if pid:
         logger.debug("Child process %d terminated", pid)
 
