@@ -8,6 +8,7 @@ class Daemon:
 	Usage: subclass the daemon class and override the run() method."""
 
 	def __init__(self, name, pidfile):
+		self.pid = None
 		self.name = name
 		self.pidfile = pidfile
 
@@ -42,7 +43,9 @@ class Daemon:
 		# write pidfile
 		atexit.register(self.delpid)
 
-		pid = str(os.getpid())
+		self.pid = os.getpid()
+
+		pid = str(self.pid)
 		with open(self.pidfile,'w') as f:
 			f.write(pid + '\n')
 
@@ -58,8 +61,9 @@ class Daemon:
 		os.dup2(se.fileno(), sys.stderr.fileno())
 
 	def delpid(self):
-		if os.path.exists(self.pidfile):
-			os.remove(self.pidfile)
+		if os.getpid() == self.pid:
+			if os.path.exists(self.pidfile):
+				os.remove(self.pidfile)
 
 	def start(self):
 		"""Start the daemon."""
