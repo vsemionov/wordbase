@@ -24,6 +24,11 @@
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 
+import logging
+
+
+logger = logging.getLogger(__name__)
+
 mp = None
 db = None
 
@@ -33,6 +38,9 @@ def _init_module(config, mtype, *args):
     mname = modules_conf[mtype]
     mconf = config[mname]
     fullname = mtype + "." + mname
+
+    logger.debug("Initializing module %s", fullname)
+
     pkg = __import__(fullname)
     mod = getattr(pkg, mname)
     mod.configure(mconf, *args)

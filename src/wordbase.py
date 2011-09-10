@@ -32,8 +32,6 @@ import configparser
 import logging
 import logging.config
 
-import modules
-import master
 import daemon
 
 
@@ -66,12 +64,13 @@ help_hint = "Try '{name} -h' for more information."
 
 
 class WBDaemon(daemon.Daemon):
-    def __init__(self, name, pidfile, *args):
+    def __init__(self, name, pidfile, task, *args):
         super().__init__(name, pidfile)
+        self.run_task = task
         self.run_args = args
 
     def run(self):
-        master.run(*self.run_args)
+        self.run_task(*self.run_args)
 
 
 def get_default_conf_path():
@@ -90,11 +89,14 @@ def print_help_hint():
     print(help_hint.format(name=PROGRAM_NAME), file=sys.stderr)
 
 def server_control(config, daemon_cmd, pidfile):
+    import modules
+    import master
+
     start_cmd = "start"
     stop_cmd = "stop"
     restart_cmd = "restart"
 
-    wbdaemon = WBDaemon(PROGRAM_NAME, pidfile)
+    wbdaemon = WBDaemon(PROGRAM_NAME, pidfile, master.run)
     control_func = None
 
     if daemon_cmd in (None, start_cmd, restart_cmd):
@@ -123,6 +125,8 @@ def server_control(config, daemon_cmd, pidfile):
         print("command \"{}\" not recognized".format(daemon_cmd), file=sys.stderr)
         print_help_hint()
         sys.exit(2)
+
+    logger.debug("Initialized")
 
     control_func()
 

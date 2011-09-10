@@ -24,5 +24,11 @@
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 
+import logging
+
+
+logger = logging.getLogger(__name__)
+
+
 def configure(config):
-    pass
+    logger.debug("Initialized")

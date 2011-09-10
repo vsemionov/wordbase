@@ -26,6 +26,10 @@
 
 import os
 import signal
+import logging
+
+
+logger = logging.getLogger(__name__)
 
 
 def _sigchld_handler(signum, frame):
@@ -33,6 +37,8 @@ def _sigchld_handler(signum, frame):
 
 def configure(config):
     signal.signal(signal.SIGCHLD, _sigchld_handler)
+
+    logger.debug("Initialized")
 
 def process(task, sock, addr, *args):
     pid = os.fork()

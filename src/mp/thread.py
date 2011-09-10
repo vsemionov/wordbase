@@ -25,10 +25,13 @@
 
 
 import threading
+import logging
 
+
+logger = logging.getLogger(__name__)
 
 def configure(config):
-    pass
+    logger.debug("Initialized")
 
 def process(task, sock, addr, *args):
     thr = threading.Thread(target=task, args = (sock, addr) + args)
