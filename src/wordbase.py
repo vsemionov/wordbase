@@ -33,102 +33,139 @@ import configparser
 
 import modules
 import master
+import daemon
 
 
 PROGRAM_NAME = "wordbase"
 PROGRAM_VERSION = "0.1"
 
 
-_version_info = \
+version_info = \
 """{name} {version}
 Copyright (C) 2011 Victor Semionov"""
 
-_usage_help = \
-"""usage: {name} [-d] [conf_file]
+usage_help = \
+"""Usage: {name} [-f conf_file] [-d command]
 
-options:
- -d    daemon mode
+Options:
+ -v            print version information and exit
+ -h            print this help message and exit
+ -c conf_file  read the specified configuration file
+ -p pidfile    use the specified process id file in deamon mode
+ -d            daemon mode
 
-arguments:
- conf  path to configuration file"""
+Daemon control commands:
+ start         start daemon
+ stop          stop daemon
+ restart       restart daemon"""
 
-_help_hint = "Try '{name} -h' for more information."
+help_hint = "Try '{name} -h' for more information."
+
+
+class WBDaemon(daemon.daemon):
+    def __init__(self, pidfile, *args):
+        super().__init__(pidfile)
+        self.run_args = args
+
+    def run(self):
+        master.run(*self.run_args)
 
 
 def get_default_conf_path():
-    conf_filename = PROGRAM_NAME + ".conf"
-    script_path = os.path.abspath(__file__)
-    script_dir = os.path.dirname(script_path)
-    default_conf_path = os.path.join(script_dir, conf_filename)
-    return default_conf_path
+    return "/etc/" + PROGRAM_NAME + ".conf"
+
+def get_default_pidfile():
+    return "/var/run/" + PROGRAM_NAME + ".pid"
 
 def print_usage():
-    print(_usage_help.format(name=PROGRAM_NAME))
+    print(usage_help.format(name=PROGRAM_NAME))
 
 def print_version():
-    print(_version_info.format(name=PROGRAM_NAME, version=PROGRAM_VERSION))
+    print(version_info.format(name=PROGRAM_NAME, version=PROGRAM_VERSION))
 
 def print_help_hint():
-    print(_help_hint.format(name=PROGRAM_NAME), file=sys.stderr)
+    print(help_hint.format(name=PROGRAM_NAME), file=sys.stderr)
 
-def start_server(address, backlog, timeout, daemon_mode):
-    args = (address, backlog, timeout, modules.mp)
-    if daemon_mode:
-        import daemon
-        with daemon.DaemonContext():
-            master.run(*args)
+def server_control(config, daemon_cmd, pidfile):
+    start_cmd = "start"
+    stop_cmd = "stop"
+    restart_cmd = "restart"
+
+    wbdaemon = WBDaemon(pidfile)
+    command_func = None
+
+    if daemon_cmd in (None, start_cmd, restart_cmd):
+        modules.init(config)
+
+        wbconfig = config["wordbase"]
+        host = wbconfig["host"]
+        port = int(wbconfig["port"])
+        backlog = int(wbconfig["backlog"])
+        timeout = int(wbconfig["timeout"])
+        address = (host, port)
+
+        wbdaemon.run_args = (address, backlog, timeout, modules.mp)
+
+        if daemon_cmd == start_cmd:
+            command_func = wbdaemon.start
+        elif daemon_cmd == restart_cmd:
+            command_func = wbdaemon.restart
+        elif daemon_cmd is None:
+            command_func = wbdaemon.run
+        else:
+            assert False, "unhandled command"
+    elif daemon_cmd == stop_cmd:
+        command_func = wbdaemon.stop
     else:
-        master.run(*args)
+        assert False, "unhandled command"
+
+    command_func()
 
 def main():
-    daemon = False
+    conf_path = None
+    pidfile = None
+    daemon = None
 
     try:
-        opts, args = getopt.getopt(sys.argv[1:], "dhv")
+        opts, args = getopt.getopt(sys.argv[1:], "vhc:p:d:")
     except getopt.GetoptError as ge:
         print(ge, file=sys.stderr)
         print_help_hint()
         sys.exit(2)
 
     for opt, arg in opts:
-        del arg
-        if opt == "-d":
-            daemon = True
+        if opt == "-v":
+            print_version()
+            return
         elif opt == "-h":
             print_usage()
             return
-        elif opt == "-v":
-            print_version()
-            return
+        elif opt == "-c":
+            conf_path = arg
+        elif opt == "-p":
+            pidfile = arg
+        elif opt == "-d":
+            daemon = arg
         else:
             assert False, "unhandled option"
 
-    if len(args) == 1:
-        conf_path = args[0]
-    elif len(args) == 0:
+    if conf_path is None:
         conf_path = get_default_conf_path()
-    else:
-        print("more than one argument specified", file=sys.stderr)
-        print_help_hint()
-        sys.exit(2)
+    if pidfile is None:
+        pidfile = get_default_pidfile()
 
     with open(conf_path) as conf:
         config = configparser.ConfigParser()
         config.read_file(conf, conf_path)
 
-    modules.init(config)
-
-    wbconfig = config["wordbase"]
-    host = wbconfig["host"]
-    port = int(wbconfig["port"])
-    backlog = int(wbconfig["backlog"])
-    timeout = int(wbconfig["timeout"])
-    address = (host, port)
-    start_server(address, backlog, timeout, daemon)
+    server_control(config, daemon, pidfile)
 
 
 try:
     main()
 except Exception as ex:
-    print("{}: {}".format(ex.__class__.__name__, ex), file=sys.stderr)
-    sys.exit(1)
+    if __file__.endswith(".py"):
+        raise
+    else:
+        print("{}: {}".format(ex.__class__.__name__, ex), file=sys.stderr)
+        sys.exit(1)
