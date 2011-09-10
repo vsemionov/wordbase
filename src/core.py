@@ -30,11 +30,14 @@ import logging
 logger = logging.getLogger(__name__)
 
 
+def _session(sock):
+    pass
+
 def process_session(sock, addr):
     with sock:
         host, port = addr
         logger.info("Session started from address %s:%d", host, port)
         try:
-            pass
+            _session(sock)
         finally:
             logger.info("Session ended")

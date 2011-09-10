@@ -41,7 +41,7 @@ def _sigterm_handler(signum, frame):
     logger.info("Caught SIGTERM, terminating")
     sys.exit()
 
-def accept_connections(sock, timeout, mp):
+def _accept_connections(sock, timeout, mp):
     logger.info("Waiting for connections")
 
     while True:
@@ -73,7 +73,7 @@ def run(address, backlog, timeout, mp):
 
     pid = os.getpid()
     try:
-        accept_connections(sock, timeout, mp)
+        _accept_connections(sock, timeout, mp)
     finally:
         if os.getpid() == pid:
             logger.info("Server terminated")
