@@ -30,10 +30,18 @@ import logging
 
 logger = logging.getLogger(__name__)
 
+
 def configure(config):
     logger.debug("Initialized")
 
+def thread_task(task, sock, addr, *args):
+    logger.debug("Thread started")
+    try:
+        task(sock, addr, *args)
+    finally:
+        logger.debug("Thread exiting")
+
 def process(task, sock, addr, *args):
-    thr = threading.Thread(target=task, args = (sock, addr) + args)
+    thr = threading.Thread(target=thread_task, args = (task, sock, addr) + args)
     thr.daemon = True
     thr.start()

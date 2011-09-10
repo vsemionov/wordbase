@@ -27,9 +27,10 @@
 
 
 import sys
+import os
 import getopt
 import configparser
-import logging
+#import logging
 import logging.config
 
 import daemon
@@ -46,13 +47,12 @@ version_info = \
 Copyright (C) 2011 Victor Semionov"""
 
 usage_help = \
-"""Usage: {name} [-f conf_file] [-p pidfile] [-d command]
+"""Usage: {name} [-f conf_file] [-d command]
 
 Options:
  -v            print version information and exit
  -h            print this help message and exit
- -c conf_file  read the specified configuration file
- -p pidfile    use the specified process id file in deamon mode
+ -f conf_file  read the specified configuration file
  -d            daemon mode
 
 Daemon control commands:
@@ -76,9 +76,6 @@ class WBDaemon(daemon.Daemon):
 def get_default_conf_path():
     return "/etc/" + PROGRAM_NAME + ".conf"
 
-def get_default_pidfile():
-    return "/var/run/" + PROGRAM_NAME + ".pid"
-
 def print_usage():
     print(usage_help.format(name=PROGRAM_NAME))
 
@@ -88,7 +85,7 @@ def print_version():
 def print_help_hint():
     print(help_hint.format(name=PROGRAM_NAME), file=sys.stderr)
 
-def server_control(config, daemon_cmd, pidfile):
+def server_control(config, daemon_cmd):
     import modules
     import master
 
@@ -96,20 +93,23 @@ def server_control(config, daemon_cmd, pidfile):
     stop_cmd = "stop"
     restart_cmd = "restart"
 
+    wbconfig = config["wordbase"]
+
+    pidfile = wbconfig["pidfile"]
     wbdaemon = WBDaemon(PROGRAM_NAME, pidfile, master.run)
     control_func = None
 
     if daemon_cmd in (None, start_cmd, restart_cmd):
         modules.init(config)
 
-        wbconfig = config["wordbase"]
+        pid = os.getpid()
         host = wbconfig["host"]
         port = int(wbconfig["port"])
         backlog = int(wbconfig["backlog"])
         timeout = int(wbconfig["timeout"])
         address = (host, port)
 
-        wbdaemon.run_args = (address, backlog, timeout, modules.mp)
+        wbdaemon.run_args = (pid, address, backlog, timeout, modules.mp)
 
         if daemon_cmd == start_cmd:
             control_func = wbdaemon.start
@@ -132,11 +132,10 @@ def server_control(config, daemon_cmd, pidfile):
 
 def main():
     conf_path = None
-    pidfile = None
     daemon = None
 
     try:
-        opts, args = getopt.getopt(sys.argv[1:], "vhc:p:d:")
+        opts, args = getopt.getopt(sys.argv[1:], "vhf:d:")
     except getopt.GetoptError as ge:
         print(ge, file=sys.stderr)
         print_help_hint()
@@ -154,10 +153,8 @@ def main():
         elif opt == "-h":
             print_usage()
             return
-        elif opt == "-c":
+        elif opt == "-f":
             conf_path = arg
-        elif opt == "-p":
-            pidfile = arg
         elif opt == "-d":
             daemon = arg
         else:
@@ -165,8 +162,6 @@ def main():
 
     if conf_path is None:
         conf_path = get_default_conf_path()
-    if pidfile is None:
-        pidfile = get_default_pidfile()
 
     #logging.raiseExceptions = False
     logging.config.fileConfig(conf_path)
@@ -178,7 +173,7 @@ def main():
         config = configparser.ConfigParser()
         config.read_file(conf, conf_path)
 
-    server_control(config, daemon, pidfile)
+    server_control(config, daemon)
 
 
 try:

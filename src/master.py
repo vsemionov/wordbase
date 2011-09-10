@@ -24,25 +24,40 @@
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 
+import os
 import socket
 import errno
+import logging
 
 import core
 
 
+logger = logging.getLogger(__name__)
+
+
 def accept_connections(sock, timeout, mp):
+    logger.info("Waiting for connections")
     while True:
         try:
             conn, addr = sock.accept()
+            host, port = addr
+            logger.debug("Accepted connection from address %s:%d", host, port)
             conn.settimeout(timeout)
-            mp.process(core.handle_client, conn, addr)
+            mp.process(core.process_session, conn, addr)
         except IOError as ioe:
             if ioe.errno != errno.EINTR:
                 raise
 
-def run(address, backlog, timeout, mp):
+def run(pid, address, backlog, timeout, mp):
+    logger.info("Server starting")
     sock = socket.socket()
     sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
     sock.bind(address)
     sock.listen(backlog)
-    accept_connections(sock, timeout, mp)
+    host, port = address
+    logger.info("Listening on address %s:%d", host, port)
+    try:
+        accept_connections(sock, timeout, mp)
+    finally:
+        if os.getpid() == pid:
+            logger.info("Server terminated")

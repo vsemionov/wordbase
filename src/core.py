@@ -24,6 +24,17 @@
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 
-def handle_client(sock, addr):
+import logging
+
+
+logger = logging.getLogger(__name__)
+
+
+def process_session(sock, addr):
     with sock:
-        pass
+        host, port = addr
+        logger.info("Session started from address %s:%d", host, port)
+        try:
+            pass
+        finally:
+            logger.info("Session ended")

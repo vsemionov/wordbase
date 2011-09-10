@@ -24,6 +24,7 @@
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 
+import sys
 import os
 import signal
 import logging
@@ -43,7 +44,11 @@ def configure(config):
 def process(task, sock, addr, *args):
     pid = os.fork()
     if pid == 0:
-        task(sock, addr, *args)
+        logger.debug("Process started")
+        try:
+            task(sock, addr, *args)
+        finally:
+            logger.debug("Process exiting")
         sys.exit()
     else:
         sock.close()
