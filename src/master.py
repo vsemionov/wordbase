@@ -69,7 +69,7 @@ def run(address, backlog, timeout, mp):
     sock.listen(backlog)
 
     host, port = address
-    logger.info("Listening on address %s:%d", host, port)
+    logger.info("Listening at address %s:%d", host, port)
 
     pid = os.getpid()
     try:
