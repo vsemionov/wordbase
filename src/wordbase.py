@@ -119,7 +119,9 @@ def server_control(config, daemon_cmd, pidfile):
     elif daemon_cmd == stop_cmd:
         control_func = wbdaemon.stop
     else:
-        assert False, "unhandled command"
+        print("command \"{}\" not recognized".format(daemon_cmd), file=sys.stderr)
+        print_help_hint()
+        sys.exit(2)
 
     control_func()
 
