@@ -22,3 +22,38 @@
 # CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
 # OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+
+
+import io
+
+
+dict_newline = "\r\n"
+
+
+def get_sio(sock):
+    sio = sock.makefile(mode="rw", encoding="utf-8", newline=dict_newline)
+    return sio
+
+def read_line(sio):
+    buff = io.StringIO(newline=dict_newline)
+    count = 0
+    have_cr = False
+
+    while True:
+        ch = sio.read(1)
+        if not ch:
+            raise EOFError("connection closed prematurely")
+        buff.write(ch)
+        count += 1
+
+        if ch == '\n' and have_cr:
+            return buff.getvalue().rstrip("\n")
+        elif count >= 1024:
+            raise BufferError("exceeded maximum command line length")
+        have_cr = ch == '\r'
+
+def write_line(sio, line):
+    pass
+
+def write_status(sio, status, line):
+    write_line(sio, "{} {}".format(status, line))
