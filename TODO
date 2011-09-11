@@ -1,0 +1,3 @@
+- set uid and gid to configurable IDs
+- log messages (commands and responses) with level trace, less than debug
+- configurable max clients (threads or procs)
