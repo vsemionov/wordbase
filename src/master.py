@@ -34,6 +34,8 @@ import logging
 import core
 
 
+_sock = None
+
 logger = logging.getLogger(__name__)
 
 
@@ -58,22 +60,24 @@ def _accept_connections(sock, timeout, mp):
             if ioe.errno != errno.EINTR:
                 raise
 
-def run(address, backlog, timeout, mp):
+def init(address, backlog):
     logger.info("server starting")
 
     signal.signal(signal.SIGTERM, _sigterm_handler)
 
-    sock = socket.socket()
-    sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
-    sock.bind(address)
-    sock.listen(backlog)
+    global _sock
+    _sock = socket.socket()
+    _sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+    _sock.bind(address)
+    _sock.listen(backlog)
 
     host, port = address
     logger.info("listening at address %s:%d", host, port)
 
+def run(timeout, mp):
     pid = os.getpid()
     try:
-        _accept_connections(sock, timeout, mp)
+        _accept_connections(_sock, timeout, mp)
     finally:
         if os.getpid() == pid:
             logger.info("server terminated")

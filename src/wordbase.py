@@ -27,8 +27,10 @@
 
 
 import sys
+import os
 import getopt
 import configparser
+import pwd, grp
 import logging
 
 import log
@@ -84,9 +86,35 @@ def print_version():
 def print_help_hint():
     print(help_hint.format(name=PROGRAM_NAME), file=sys.stderr)
 
+def drop_privs(wbconfig):
+    user = wbconfig["user"]
+    group = wbconfig["group"]
+
+    uentry = pwd.getpwnam(user)
+    uid = uentry[2]
+    if group:
+        gid = grp.getgrnam(group)[2]
+    else:
+        gid = uentry[3]
+
+    os.setgid(gid)
+    os.setuid(uid)
+
+def start_server(wbconfig, mp):
+    import master
+
+    host = wbconfig["host"]
+    port = int(wbconfig["port"])
+    backlog = int(wbconfig["backlog"])
+    timeout = int(wbconfig["timeout"])
+    address = (host, port)
+
+    master.init(address, backlog)
+    drop_privs(wbconfig)
+    master.run(timeout, mp)
+
 def server_control(config, daemon_cmd):
     import modules
-    import master
 
     start_cmd = "start"
     stop_cmd = "stop"
@@ -95,19 +123,13 @@ def server_control(config, daemon_cmd):
     wbconfig = config["wordbase"]
 
     pidfile = wbconfig["pidfile"]
-    wbdaemon = WBDaemon(PROGRAM_NAME, pidfile, master.run)
+    wbdaemon = WBDaemon(PROGRAM_NAME, pidfile, start_server)
     control_func = None
 
     if daemon_cmd in (None, start_cmd, restart_cmd):
         modules.init(config)
 
-        host = wbconfig["host"]
-        port = int(wbconfig["port"])
-        backlog = int(wbconfig["backlog"])
-        timeout = int(wbconfig["timeout"])
-        address = (host, port)
-
-        wbdaemon.run_args = (address, backlog, timeout, modules.mp)
+        wbdaemon.run_args = (wbconfig, modules.mp)
 
         if daemon_cmd == start_cmd:
             control_func = wbdaemon.start
@@ -117,14 +139,18 @@ def server_control(config, daemon_cmd):
             control_func = wbdaemon.run
         else:
             assert False, "unhandled command"
+
+        log_init = True
     elif daemon_cmd == stop_cmd:
         control_func = wbdaemon.stop
+        log_init = False
     else:
         print("command \"{}\" not recognized".format(daemon_cmd), file=sys.stderr)
         print_help_hint()
         sys.exit(2)
 
-    logger.debug("initialized")
+    if log_init:
+        logger.debug("initialized")
 
     control_func()
 
