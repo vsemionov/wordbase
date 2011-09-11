@@ -29,9 +29,9 @@
 import sys
 import getopt
 import configparser
-#import logging
-import logging.config
+import logging
 
+import log
 import daemon
 
 
@@ -161,8 +161,7 @@ def main():
     if conf_path is None:
         conf_path = get_default_conf_path()
 
-    #logging.raiseExceptions = False
-    logging.config.fileConfig(conf_path)
+    log.configure(conf_path)
 
     global logger
     logger = logging.getLogger(PROGRAM_NAME)

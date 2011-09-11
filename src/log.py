@@ -24,29 +24,12 @@
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 
-import logging
-
-import log
-import net
+import logging.config
 
 
-logger = logging.getLogger(__name__)
+TRACE = 5
 
 
-def _session(sock):
-    sio = net.get_sio(sock)
-    try:
-        while True:
-            command = net.read_line(sio)
-            logger.log(log.TRACE, command)
-    except Exception as ex:
-        logger.error(ex)
-
-def process_session(sock, addr):
-    with sock:
-        host, port = addr
-        logger.info("Session started from address %s:%d", host, port)
-        try:
-            _session(sock)
-        finally:
-            logger.info("Session ended")
+def configure(conf_path):
+    logging.addLevelName(TRACE, "TRACE")
+    logging.config.fileConfig(conf_path)
