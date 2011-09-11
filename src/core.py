@@ -26,12 +26,14 @@
 
 import logging
 
+import net
+
 
 logger = logging.getLogger(__name__)
 
 
 def _session(sock):
-    pass
+    sio = net.get_sio(sock)
 
 def process_session(sock, addr):
     with sock:
