@@ -36,9 +36,13 @@ def _session(sock):
     with net.get_sio(sock) as sio:
         try:
             while True:
-                command = net.read_line(sio)
+                try:
+                    command = net.read_line(sio)
+                except (IOError, EOFError, UnicodeDecodeError, BufferError) as ex:
+                    logger.error(ex)
+                    break
         except Exception as ex:
-            logger.error(ex)
+            logger.exception(ex)
 
 def process_session(sock, addr):
     with sock:
