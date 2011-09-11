@@ -34,13 +34,13 @@ logger = logging.getLogger(__name__)
 
 
 def _session(sock):
-    sio = net.get_sio(sock)
-    try:
-        while True:
-            command = net.read_line(sio)
-            logger.log(log.TRACE, command)
-    except Exception as ex:
-        logger.error(ex)
+    with net.get_sio(sock) as sio:
+        try:
+            while True:
+                command = net.read_line(sio)
+                logger.log(log.TRACE, command)
+        except Exception as ex:
+            logger.error(ex)
 
 def process_session(sock, addr):
     with sock:
