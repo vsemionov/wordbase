@@ -28,22 +28,42 @@ import threading
 import logging
 
 
+max_threads = 0
+guard_sem = None
+start_evt = threading.Event()
+
 logger = logging.getLogger(__name__)
 
 
 def configure(config):
+    global max_threads, guard_sem
+    max_threads = int(config["max-clients"])
+    guard_sem = threading.Semaphore(max_threads)
+
     logger.debug("initialized")
 
 def thread_task(task, sock, addr, *args):
-    logger.debug("thread started")
-    try:
-        task(sock, addr, *args)
-    except Exception:
-        logger.exception("Unhandled exception:")
-    finally:
-        logger.debug("thread exiting")
+    with guard_sem:
+        start_evt.set()
+
+        logger.debug("thread started")
+
+        try:
+            task(sock, addr, *args)
+        except Exception:
+            logger.exception("Unhandled exception:")
+        finally:
+            logger.debug("thread exiting")
 
 def process(task, sock, addr, *args):
+    if not guard_sem.acquire(False):
+        logger.warning("max-clients limit reached; waiting for a thread to terminate")
+        guard_sem.acquire()
+    guard_sem.release()
+
     thr = threading.Thread(target=thread_task, args = (task, sock, addr) + args)
     thr.daemon = True
     thr.start()
+
+    start_evt.wait()
+    start_evt.clear()
