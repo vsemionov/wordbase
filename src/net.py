@@ -71,4 +71,4 @@ def write_line(sio, line, split=True):
     pass
 
 def write_status(sio, status, line):
-    write_line(sio, "{} {}".format(status, line), split=False)
+    write_line(sio, "{:03d} {:s}".format(status, line), split=False)
