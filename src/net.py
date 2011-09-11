@@ -67,8 +67,8 @@ def _split_line(line):
     l = len(line)
     i = 0
     while i < l:
-        n, pre = 1022, '' if line[i] != '.' else 1021, '.'
-        chunk = ''.join(pre, line[i:i+n])
+        n, pre = (1022, '') if line[i] != '.' else (1021, '.')
+        chunk = ''.join((pre, line[i:i+n]))
         i += n
         yield chunk
 
@@ -76,8 +76,9 @@ def _trunc_line(line):
     return next(_split_line(line))
 
 def _write(sio, line):
-    data = ''.join(line, DICT_EOL)
+    data = ''.join((line, DICT_EOL))
     sio.write(data)
+    sio.flush()
     log.trace_server(line)
 
 def write_line(sio, line, split=True):
@@ -91,18 +92,18 @@ def write_line(sio, line, split=True):
 
     if split:
         for subline in _split_line(line):
-            _write(subline)
+            _write(sio, subline)
     else:
-        _write(_trunc_line(line))
+        _write(sio, _trunc_line(line))
 
 def write_status(sio, code, message):
     line = "{:03d} {:s}".format(code, message)
     write_line(sio, line, split=False)
 
 def write_text_end(sio):
-    _write('.')
+    _write(sio, '.')
 
 def write_text(sio, lines):
     for line in lines:
         write_line(sio, line)
-    write_text_end()
+    write_text_end(sio)

@@ -40,9 +40,9 @@ def configure(conf_path):
     logger = logging.getLogger(__name__)
 
 def trace_client(line):
-    trace = ''.join("Client: ", line)
+    trace = ''.join(("Client: ", line))
     logger.log(TRACE, trace)
 
 def trace_server(line):
-    trace = ''.join("Server: ", line)
+    trace = ''.join(("Server: ", line))
     logger.log(TRACE, trace)
