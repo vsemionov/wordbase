@@ -59,15 +59,16 @@ def read_line(sio):
     else:
         raise BufferError("client exceeded the maximum command line length")
 
-def write_line(sio, line):
+def write_line(sio, line, split=True):
     """writes a line of output
     
     The line argument should not end with an EOL.
     The first leading '.' char is doubled.
-    If the line is longer than the maximum allowed length, it is split to multiple lines.
+    If split is True, lines with above-maximum length are split to multiple lines.
+    If split is False, lines with above-maximum length are truncated.
     """
 
     pass
 
 def write_status(sio, status, line):
-    write_line(sio, "{} {}".format(status, line))
+    write_line(sio, "{} {}".format(status, line), split=False)
