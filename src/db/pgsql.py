@@ -31,4 +31,4 @@ logger = logging.getLogger(__name__)
 
 
 def configure(config):
-    logger.debug("Initialized")
+    logger.debug("initialized")

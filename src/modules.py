@@ -39,7 +39,7 @@ def _init_module(config, mtype, *args):
     mconf = config[mname]
     fullname = mtype + "." + mname
 
-    logger.debug("Initializing module %s", fullname)
+    logger.debug("initializing module %s", fullname)
 
     pkg = __import__(fullname)
     mod = getattr(pkg, mname)

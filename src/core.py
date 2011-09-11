@@ -45,8 +45,8 @@ def _session(sock):
 def process_session(sock, addr):
     with sock:
         host, port = addr
-        logger.info("Session started from address %s:%d", host, port)
+        logger.info("session started from address %s:%d", host, port)
         try:
             _session(sock)
         finally:
-            logger.info("Session ended")
+            logger.info("session ended")

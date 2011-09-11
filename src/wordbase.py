@@ -124,7 +124,7 @@ def server_control(config, daemon_cmd):
         print_help_hint()
         sys.exit(2)
 
-    logger.debug("Initialized")
+    logger.debug("initialized")
 
     control_func()
 

@@ -32,16 +32,16 @@ logger = logging.getLogger(__name__)
 
 
 def configure(config):
-    logger.debug("Initialized")
+    logger.debug("initialized")
 
 def thread_task(task, sock, addr, *args):
-    logger.debug("Thread started")
+    logger.debug("thread started")
     try:
         task(sock, addr, *args)
     except Exception:
         logger.exception("Unhandled exception:")
     finally:
-        logger.debug("Thread exiting")
+        logger.debug("thread exiting")
 
 def process(task, sock, addr, *args):
     thr = threading.Thread(target=thread_task, args = (task, sock, addr) + args)

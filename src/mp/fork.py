@@ -34,25 +34,25 @@ logger = logging.getLogger(__name__)
 
 
 def _sigchld_handler(signum, frame):
-    logger.debug("Caught SIGCHLD, waiting for status")
+    logger.debug("caught SIGCHLD; waiting for status")
     pid, status = os.waitpid(-1, os.WNOHANG)
     del status
     if pid:
-        logger.debug("Child process %d terminated", pid)
+        logger.debug("child process %d terminated", pid)
 
 def configure(config):
     signal.signal(signal.SIGCHLD, _sigchld_handler)
 
-    logger.debug("Initialized")
+    logger.debug("initialized")
 
 def process(task, sock, addr, *args):
     pid = os.fork()
     if pid == 0:
-        logger.debug("Process started")
+        logger.debug("process started")
         try:
             task(sock, addr, *args)
         finally:
-            logger.debug("Process exiting")
+            logger.debug("process exiting")
         sys.exit()
     else:
         sock.close()

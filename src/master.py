@@ -38,18 +38,18 @@ logger = logging.getLogger(__name__)
 
 
 def _sigterm_handler(signum, frame):
-    logger.info("Caught SIGTERM, terminating")
+    logger.info("caught SIGTERM; terminating")
     sys.exit()
 
 def _accept_connections(sock, timeout, mp):
-    logger.info("Waiting for connections")
+    logger.info("waiting for connections")
 
     while True:
         try:
             conn, addr = sock.accept()
 
             host, port = addr
-            logger.debug("Accepted connection from address %s:%d", host, port)
+            logger.debug("accepted connection from address %s:%d", host, port)
 
             conn.settimeout(timeout)
 
@@ -59,7 +59,7 @@ def _accept_connections(sock, timeout, mp):
                 raise
 
 def run(address, backlog, timeout, mp):
-    logger.info("Server starting")
+    logger.info("server starting")
 
     signal.signal(signal.SIGTERM, _sigterm_handler)
 
@@ -69,11 +69,11 @@ def run(address, backlog, timeout, mp):
     sock.listen(backlog)
 
     host, port = address
-    logger.info("Listening at address %s:%d", host, port)
+    logger.info("listening at address %s:%d", host, port)
 
     pid = os.getpid()
     try:
         _accept_connections(sock, timeout, mp)
     finally:
         if os.getpid() == pid:
-            logger.info("Server terminated")
+            logger.info("server terminated")
