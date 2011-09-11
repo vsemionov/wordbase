@@ -46,18 +46,18 @@ def read_line(sio):
     count = 0
     have_cr = False
 
-    while True:
+    while count < 1024:
         ch = sio.read(1)
         if not ch:
-            raise EOFError("connection closed prematurely")
+            raise EOFError("client prematurely closed the connection")
         buff.write(ch)
         count += 1
 
         if ch == '\n' and have_cr:
             return buff.getvalue().rstrip("\n")
-        elif count >= 1024:
-            raise BufferError("exceeded maximum command line length")
         have_cr = ch == '\r'
+    else:
+        raise BufferError("client exceeded maximum command line length")
 
 def write_line(sio, line):
     """writes a line of output
