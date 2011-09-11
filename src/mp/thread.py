@@ -38,6 +38,8 @@ def thread_task(task, sock, addr, *args):
     logger.debug("Thread started")
     try:
         task(sock, addr, *args)
+    except Exception:
+        logger.exception("Unhandled exception:")
     finally:
         logger.debug("Thread exiting")
 
