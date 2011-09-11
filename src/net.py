@@ -35,6 +35,13 @@ def get_sio(sock):
     return sio
 
 def read_line(sio):
+    """reads a line of input
+    
+    The trailing EOL is stripped.
+    
+    throws socket.timeout, EOFError, BufferError
+    """
+
     buff = io.StringIO(newline=dict_newline)
     count = 0
     have_cr = False
@@ -53,6 +60,13 @@ def read_line(sio):
         have_cr = ch == '\r'
 
 def write_line(sio, line):
+    """writes a line of output
+    
+    The line argument should not end with an EOL.
+    The first leading '.' char is doubled.
+    If the line is longer than the maximum allowed length, it is split to multiple lines.
+    """
+
     pass
 
 def write_status(sio, status, line):
