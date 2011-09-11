@@ -26,7 +26,6 @@
 
 import logging
 
-import log
 import net
 
 
@@ -38,7 +37,6 @@ def _session(sock):
         try:
             while True:
                 command = net.read_line(sio)
-                logger.log(log.TRACE, command)
         except Exception as ex:
             logger.error(ex)
 

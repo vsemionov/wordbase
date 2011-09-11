@@ -29,7 +29,20 @@ import logging.config
 
 TRACE = 5
 
+logger = None
+
 
 def configure(conf_path):
     logging.addLevelName(TRACE, "TRACE")
     logging.config.fileConfig(conf_path)
+
+    global logger
+    logger = logging.getLogger(__name__)
+
+def trace_client(line):
+    trace = ''.join("Client: ", line)
+    logger.log(TRACE, trace)
+
+def trace_server(line):
+    trace = ''.join("Server: ", line)
+    logger.log(TRACE, trace)
