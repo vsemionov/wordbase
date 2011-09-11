@@ -27,11 +27,11 @@
 import io
 
 
-dict_newline = "\r\n"
+DICT_EOL = '\r\n'
 
 
 def get_sio(sock):
-    sio = sock.makefile(mode="rw", encoding="utf-8", newline=dict_newline)
+    sio = sock.makefile(mode="rw", encoding="utf-8", newline=DICT_EOL)
     return sio
 
 def read_line(sio):
@@ -42,7 +42,7 @@ def read_line(sio):
     throws socket.timeout, EOFError, BufferError
     """
 
-    buff = io.StringIO(newline=dict_newline)
+    buff = io.StringIO(newline=DICT_EOL)
     count = 0
     have_cr = False
 
@@ -59,6 +59,21 @@ def read_line(sio):
     else:
         raise BufferError("client exceeded the maximum command line length")
 
+def _split_line(line):
+    l = len(line)
+    i = 0
+    while i < l:
+        n, pre = 1022, '' if line[i] != '.' else 1021, '.'
+        chunk = ''.join(pre, line[i:i+n], DICT_EOL)
+        i += n
+        yield chunk
+
+def _trunc_line(line):
+    return next(_split_line(line))
+
+def _write(sio, data):
+    sio.write(data)
+
 def write_line(sio, line, split=True):
     """writes a line of output
     
@@ -68,7 +83,22 @@ def write_line(sio, line, split=True):
     If split is False, lines with above-maximum length are truncated.
     """
 
-    pass
+    if split:
+        for data in _split_line(line):
+            _write(data)
+    else:
+        data = _trunc_line(line)
+        _write(data)
 
-def write_status(sio, status, line):
-    write_line(sio, "{:03d} {:s}".format(status, line), split=False)
+def write_status(sio, code, message):
+    line = "{:03d} {:s}".format(code, message)
+    write_line(sio, line, split=False)
+
+def write_text_end(sio):
+    data = ''.join('.', DICT_EOL)
+    _write(data)
+
+def write_text(sio, lines):
+    for line in lines:
+        write_line(sio, line)
+    write_text_end()
