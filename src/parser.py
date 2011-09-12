@@ -24,15 +24,14 @@
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 
-import pyparsing
-from pyparsing import ParserElement, Empty, White, Suppress, CharsNotIn, Combine, ZeroOrMore, OneOrMore, StringStart, StringEnd, CaselessKeyword
+import logging
+
+from pyparsing import ParseException, ParserElement, Empty, White, Suppress, CharsNotIn, Combine, ZeroOrMore, OneOrMore, StringStart, StringEnd, CaselessKeyword
 
 import modules
 
 
-class ParserError(Exception):
-    pass
-
+logger = logging.getLogger(__name__)
 
 CTL = ''.join(chr(i) for i in range(0, 32)) + chr(127)
 WS = " \t"
@@ -73,10 +72,31 @@ _text = Combine(OneOrMore(_word.copy().setParseAction(_word_action) | _ws.copy()
 _description = _text.copy()
 
 
-def _command_string(body):
-    return StringStart() + body + StringEnd()
+_cmd_found = None
 
-_command = _command_string(Empty())
+def _cmd_action(t):
+    global _cmd_found
+    cmd = ' '.join(t)
+    _cmd_found = cmd
+    return cmd
+
+_start = StringStart()
+_end = StringEnd()
+
+def _command_string(body):
+    return _start + body + _end
+
+def _command_name(name):
+    words = [w for w in name.split(' ') if w]
+    if words:
+        cmd = CaselessKeyword(words[0])
+        for word in words[1:]:
+            cmd += CaselessKeyword(word)
+    else:
+        cmd = Empty()
+    return cmd.setParseAction(_cmd_action)
+
+_command = _command_string(_command_name(""))
 
 _command.parseWithTabs()
 
@@ -87,6 +107,7 @@ _parser_lock = modules.mp.Lock()
 def parse_command(line):
     with _parser_lock:
         try:
-            return _command.parseString(line)
-        except pyparsing.ParseException as pe:
-            raise ParserError(pe)
+            return True, _command.parseString(line)
+        except ParseException as pe:
+            logger.debug(pe)
+            return False, _cmd_found
