@@ -24,7 +24,42 @@
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 
-import pyparsing
+from pyparsing import ParserElement, Literal, CharsNotIn, Combine, ZeroOrMore, OneOrMore, removeQuotes
+
+
+CTL = ''.join(chr(i) for i in range(0, 32)) + chr(127)
+
+ParserElement.setDefaultWhitespaceChars("")
+
+_quoted_pair = Literal('\\').suppress() + CharsNotIn("", exact=1)
+_dqtext = CharsNotIn("\"\\" + CTL, exact=1)
+_dqstring = Combine('"' + ZeroOrMore(_dqtext | _quoted_pair) + '"').setParseAction(removeQuotes)
+_sqtext = CharsNotIn("'\\" + CTL, exact=1)
+_sqstring = Combine('\'' + ZeroOrMore(_sqtext | _quoted_pair) + '\'').setParseAction(removeQuotes)
+
+_atom = CharsNotIn(" '\"\\" + CTL)
+_string = Combine(OneOrMore(_dqstring | _sqstring | _quoted_pair))
+_word = Combine(OneOrMore(_atom | _string))
+_description = ZeroOrMore(_word)
+_text = _description.copy()
+
+#from pyparsing import Word, Literal, Combine, ZeroOrMore, OneOrMore, removeQuotes
+#
+#
+#CHAR = ''.join(chr(i) for i in range(0, 0xFFFF))
+#CTL = ''.join(chr(i) for i in range(0, 32)) + chr(127)
+#
+#_quoted_pair = Combine(Literal('\\').suppress() + Word(CHAR, exact=1))
+#_dqtext = Word(CHAR, excludeChars="\"\\"+CTL, exact=1)
+#_dqstring = Combine('"' + ZeroOrMore(_dqtext | _quoted_pair) + '"').setParseAction(removeQuotes)
+#_sqtext = Word(CHAR, excludeChars="'\\"+CTL, exact=1)
+#_sqstring = Combine('\'' + ZeroOrMore(_sqtext | _quoted_pair) + '\'').setParseAction(removeQuotes)
+#
+#_atom = Word(CHAR, excludeChars=" '\"\\"+CTL)
+#_string = Combine(OneOrMore(_dqstring | _sqstring | _quoted_pair))
+#_word = Combine(OneOrMore(_atom | _string))
+#_description = ZeroOrMore(_word)
+#_text = _description.copy()
 
 
 def parse_command(line):
