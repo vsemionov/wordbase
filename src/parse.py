@@ -49,6 +49,7 @@ _text = _description.copy()
 
 #notes:
 #- call parseWithTabs() before calling parseString()
+#- skip blank lines
 
 
 def parse_command(line):
