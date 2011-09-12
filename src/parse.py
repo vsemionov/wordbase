@@ -43,8 +43,27 @@ _sqstring = Combine(Suppress('\'') + ZeroOrMore(_sqtext | _quoted_pair) + Suppre
 _atom = Empty() + CharsNotIn(" '\"\\" + CTL)
 _string = Combine(OneOrMore(_dqstring | _sqstring | _quoted_pair))
 _word = Combine(OneOrMore(_atom | _string))
-_description = Combine(OneOrMore(_word | _ws))
-_text = _description.copy()
+
+_ws_state = ""
+
+def _ws_action(t):
+    global _ws_state
+    _ws_state = t[0]
+    return ""
+
+def _word_action(t):
+    global _ws_state
+    if _ws_state:
+        r = ''.join((_ws_state, t[0]))
+        _ws_state = ""
+        return r
+
+def _text_action(t):
+    global _ws_state
+    _ws_state = ""
+
+_text = Combine(OneOrMore(_word.copy().setParseAction(_word_action) | _ws.copy().setParseAction(_ws_action))).setParseAction(_text_action)
+_description = _text.copy()
 
 
 #notes:
