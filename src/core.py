@@ -33,15 +33,26 @@ import parser
 logger = logging.getLogger(__name__)
 
 
+def _handle_command(sio, command):
+    pass
+
 def _session(sock):
     with net.get_sio(sock) as sio:
         try:
-            while True:
+            end = False
+            while not end:
                 try:
-                    command = net.read_line(sio)
+                    line = net.read_line(sio)
                 except (IOError, EOFError, UnicodeDecodeError, BufferError) as ex:
                     logger.error(ex)
                     break
+
+                try:
+                    command = parser.parse_command(line)
+                    end = _handle_command(sio, command)
+                except parser.ParserError as pe:
+                    logger.debug(pe)
+                    continue
         except Exception as ex:
             logger.exception(ex)
 

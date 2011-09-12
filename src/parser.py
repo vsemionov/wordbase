@@ -24,10 +24,14 @@
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 
-import pickle
-
 import pyparsing
-from pyparsing import ParserElement, Empty, White, Suppress, CharsNotIn, Combine, ZeroOrMore, OneOrMore
+from pyparsing import ParserElement, Empty, White, Suppress, CharsNotIn, Combine, ZeroOrMore, OneOrMore, StringStart, StringEnd, CaselessKeyword
+
+import modules
+
+
+class ParserError(Exception):
+    pass
 
 
 CTL = ''.join(chr(i) for i in range(0, 32)) + chr(127)
@@ -69,19 +73,24 @@ _text = Combine(OneOrMore(_word.copy().setParseAction(_word_action) | _ws.copy()
 _description = _text.copy()
 
 
-class ParserException(Exception):
-    pass
+def _command_string(body):
+    return StringStart() + body + StringEnd()
 
-# Grammar objects are copies of a pre-stored instance.
-# This is done to avoid multi-threading problems without resorting to synchronization and without reconstructing the grammar for every instance.
-# Also note that the copying is actually performed by pickling, which is faster.
-# See http://pyparsing.wikispaces.com/message/view/home/644825
-class _Grammar():
-    def __init__(self):
+_command = _command_string(Empty())
 
-class Parser():
-    pass
+_command.parseWithTabs()
+
+
+_parser_lock = modules.mp.Lock()
+
 
 #notes:
 #- call parseWithTabs() before calling parseString()
 #- skip blank lines
+
+def parse_command(line):
+    with _parser_lock:
+        try:
+            return _command.parseString(line)
+        except pyparsing.ParseException as pe:
+            raise ParserError(pe)

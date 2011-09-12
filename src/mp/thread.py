@@ -35,6 +35,9 @@ start_evt = threading.Event()
 logger = logging.getLogger(__name__)
 
 
+Lock = threading.Lock
+
+
 def configure(config):
     global max_threads, guard_sem
     max_threads = int(config["max-clients"])
