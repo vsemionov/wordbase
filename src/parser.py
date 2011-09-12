@@ -84,10 +84,6 @@ _command.parseWithTabs()
 _parser_lock = modules.mp.Lock()
 
 
-#notes:
-#- call parseWithTabs() before calling parseString()
-#- skip blank lines
-
 def parse_command(line):
     with _parser_lock:
         try:
