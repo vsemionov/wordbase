@@ -24,6 +24,9 @@
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 
+import pickle
+
+import pyparsing
 from pyparsing import ParserElement, Empty, White, Suppress, CharsNotIn, Combine, ZeroOrMore, OneOrMore
 
 
@@ -66,10 +69,19 @@ _text = Combine(OneOrMore(_word.copy().setParseAction(_word_action) | _ws.copy()
 _description = _text.copy()
 
 
+class ParserException(Exception):
+    pass
+
+# Grammar objects are copies of a pre-stored instance.
+# This is done to avoid multi-threading problems without resorting to synchronization and without reconstructing the grammar for every instance.
+# Also note that the copying is actually performed by pickling, which is faster.
+# See http://pyparsing.wikispaces.com/message/view/home/644825
+class _Grammar():
+    def __init__(self):
+
+class Parser():
+    pass
+
 #notes:
 #- call parseWithTabs() before calling parseString()
 #- skip blank lines
-
-
-def parse_command(line):
-    pass

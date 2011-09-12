@@ -27,7 +27,7 @@
 import logging
 
 import net
-import parse
+import parser
 
 
 logger = logging.getLogger(__name__)
