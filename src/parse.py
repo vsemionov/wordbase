@@ -24,13 +24,13 @@
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 
-from pyparsing import ParserElement, White, Suppress, CharsNotIn, Combine, ZeroOrMore, OneOrMore
+from pyparsing import ParserElement, Empty, White, Suppress, CharsNotIn, Combine, ZeroOrMore, OneOrMore
 
 
 CTL = ''.join(chr(i) for i in range(0, 32)) + chr(127)
 WS = " \t"
 
-ParserElement.setDefaultWhitespaceChars("")
+ParserElement.setDefaultWhitespaceChars(WS)
 
 _ws = White(WS)
 
@@ -40,10 +40,10 @@ _dqstring = Combine(Suppress('"') + ZeroOrMore(_dqtext | _quoted_pair) + Suppres
 _sqtext = CharsNotIn("'\\" + CTL, exact=1)
 _sqstring = Combine(Suppress('\'') + ZeroOrMore(_sqtext | _quoted_pair) + Suppress('\''))
 
-_atom = CharsNotIn(" '\"\\" + CTL)
+_atom = Empty() + CharsNotIn(" '\"\\" + CTL)
 _string = Combine(OneOrMore(_dqstring | _sqstring | _quoted_pair))
 _word = Combine(OneOrMore(_atom | _string))
-_description = Combine(ZeroOrMore(_word | _ws)).setParseAction(lambda t: t[0].strip(WS))
+_description = Combine(OneOrMore(_word | _ws))
 _text = _description.copy()
 
 
