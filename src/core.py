@@ -27,6 +27,7 @@
 import logging
 
 import net
+import parse
 
 
 logger = logging.getLogger(__name__)
@@ -38,8 +39,6 @@ def _session(sock):
             while True:
                 try:
                     command = net.read_line(sio)
-                    if not len(command):
-                        continue
                 except (IOError, EOFError, UnicodeDecodeError, BufferError) as ex:
                     logger.error(ex)
                     break
