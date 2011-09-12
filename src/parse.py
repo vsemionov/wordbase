@@ -47,5 +47,9 @@ _description = Combine(OneOrMore(_word | _ws))
 _text = _description.copy()
 
 
+#notes:
+#- call parseWithTabs() before calling parseString()
+
+
 def parse_command(line):
     pass
