@@ -44,7 +44,7 @@ def read_line(sio):
     throws socket.timeout, EOFError, BufferError
     """
 
-    buff = io.StringIO(newline=DICT_EOL)
+    buff = io.StringIO(newline='\n')
     count = 0
     have_cr = False
 
@@ -56,7 +56,7 @@ def read_line(sio):
         count += 1
 
         if ch == '\n' and have_cr:
-            line = buff.getvalue().rstrip("\n")
+            line = buff.getvalue()[:-2]
             log.trace_client(line)
             return line
         have_cr = ch == '\r'
