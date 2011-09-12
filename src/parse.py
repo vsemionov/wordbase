@@ -24,7 +24,7 @@
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 
-from pyparsing import ParserElement, White, Literal, CharsNotIn, Combine, ZeroOrMore, OneOrMore, removeQuotes
+from pyparsing import ParserElement, White, Suppress, CharsNotIn, Combine, ZeroOrMore, OneOrMore
 
 
 CTL = ''.join(chr(i) for i in range(0, 32)) + chr(127)
@@ -34,11 +34,11 @@ ParserElement.setDefaultWhitespaceChars("")
 
 _ws = White(WS)
 
-_quoted_pair = Literal('\\').suppress() + CharsNotIn("", exact=1)
+_quoted_pair = Suppress('\\') + CharsNotIn("", exact=1)
 _dqtext = CharsNotIn("\"\\" + CTL, exact=1)
-_dqstring = Combine('"' + ZeroOrMore(_dqtext | _quoted_pair) + '"').setParseAction(removeQuotes)
+_dqstring = Combine(Suppress('"') + ZeroOrMore(_dqtext | _quoted_pair) + Suppress('"'))
 _sqtext = CharsNotIn("'\\" + CTL, exact=1)
-_sqstring = Combine('\'' + ZeroOrMore(_sqtext | _quoted_pair) + '\'').setParseAction(removeQuotes)
+_sqstring = Combine(Suppress('\'') + ZeroOrMore(_sqtext | _quoted_pair) + Suppress('\''))
 
 _atom = CharsNotIn(" '\"\\" + CTL)
 _string = Combine(OneOrMore(_dqstring | _sqstring | _quoted_pair))
