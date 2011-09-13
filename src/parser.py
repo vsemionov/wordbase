@@ -26,7 +26,7 @@
 
 import logging
 
-from pyparsing import ParseException, ParserElement, Empty, White, Suppress, CharsNotIn, Combine, ZeroOrMore, OneOrMore, StringStart, StringEnd, CaselessKeyword
+from pyparsing import ParseException, ParserElement, Empty, White, Suppress, CharsNotIn, Combine, ZeroOrMore, OneOrMore, Optional, StringStart, StringEnd, CaselessKeyword
 
 import modules
 
@@ -76,9 +76,7 @@ _cmd_found = None
 
 def _cmd_action(t):
     global _cmd_found
-    cmd = ' '.join(t)
-    _cmd_found = cmd
-    return cmd
+    _cmd_found = t[0]
 
 _start = StringStart()
 _end = StringEnd()
@@ -87,16 +85,32 @@ def _command_string(body):
     return _start + body + _end
 
 def _command_name(name):
-    words = [w for w in name.split(' ') if w]
-    if words:
-        cmd = CaselessKeyword(words[0])
-        for word in words[1:]:
-            cmd += CaselessKeyword(word)
+    if name:
+        cmd = CaselessKeyword(name)
     else:
         cmd = Empty()
     return cmd.setParseAction(_cmd_action)
 
+
+_show_db = CaselessKeyword("DB") | CaselessKeyword("DATABASES")
+_show_strat = CaselessKeyword("STRAT") | CaselessKeyword("STRATEGIES")
+_show_info = CaselessKeyword("INFO") + _atom
+_show_server = CaselessKeyword("SERVER")
+
+_show_params = _show_db | _show_strat | _show_info | _show_server
+
 _command = _command_string(_command_name(""))
+_command = _command_string(_command_name("DEFINE") + _atom + _word)
+_command = _command_string(_command_name("MATCH") + _atom + _atom + _word)
+_command = _command_string(_command_name("SHOW") + _show_params)
+_command = _command_string(_command_name("CLIENT") + Optional(_text, default=""))
+_command = _command_string(_command_name("STATUS"))
+_command = _command_string(_command_name("HELP"))
+_command = _command_string(_command_name("QUIT"))
+_command = _command_string(_command_name("OPTION") + CaselessKeyword("MIME"))
+_command = _command_string(_command_name("AUTH") + Optional(_text)) # not supported, therefore defined liberally
+_command = _command_string(_command_name("SASLAUTH") + Optional(_text)) # not supported, therefore defined liberally
+_command = _command_string(_command_name("SASLRESP") + Optional(_text)) # not supported, therefore defined liberally
 
 _command.parseWithTabs()
 
