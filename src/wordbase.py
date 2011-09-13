@@ -92,10 +92,7 @@ def drop_privs(wbconfig):
 
     uentry = pwd.getpwnam(user)
     uid = uentry[2]
-    if group:
-        gid = grp.getgrnam(group)[2]
-    else:
-        gid = uentry[3]
+    gid = grp.getgrnam(group)[2] if group else uentry[3]
 
     os.setgid(gid)
     os.setuid(uid)
