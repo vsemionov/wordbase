@@ -26,62 +26,60 @@
 
 import sys
 import os
-import socket
 import signal
-import errno
+import time
 import logging
 
-import core
+import mp
 
 
-_sock = None
+num_children = 0
+max_children = 0
 
 logger = logging.getLogger(__name__)
 
+Lock = mp.DummyLock
 
-def _sigterm_handler(signum, frame):
-    logger.info("caught SIGTERM; terminating")
-    sys.exit()
 
-def _accept_connections(sock, timeout, mp):
-    prevent_eintr = hasattr(signal, "siginterrupt") and hasattr(signal, "SIGCHLD")
+def _sigchld_handler(signum, frame):
+    logger.debug("caught SIGCHLD; waiting for status")
+    pid, status = os.waitpid(-1, os.WNOHANG)
+    del status
+    if pid:
+        global num_children
+        num_children -= 1
+        logger.debug("child process %d terminated", pid)
 
-    logger.info("waiting for connections")
+def configure(config):
+    global max_children
+    max_children = int(config["max-clients"])
 
-    while True:
+    signal.signal(signal.SIGCHLD, _sigchld_handler)
+
+    logger.debug("initialized")
+
+def process(task, sock, addr, *args):
+    global num_children, max_children
+
+    overload_logged = False
+    while num_children >= max_children:
+        if not overload_logged:
+            logger.warning("max-clients limit exceeded; waiting for a child to terminate")
+            overload_logged = True
+        time.sleep(1)
+
+    pid = os.fork()
+    if pid == 0:
+        logger.debug("process started")
+        status = 0
         try:
-            if prevent_eintr: signal.siginterrupt(signal.SIGCHLD, True)
-            conn, addr = sock.accept()
-            if prevent_eintr: signal.siginterrupt(signal.SIGCHLD, False)
-        except IOError as ioe:
-            if ioe.errno == errno.EINTR: continue
-            else: raise
-
-        host, port = addr
-        logger.debug("accepted connection from address %s:%d", host, port)
-
-        conn.settimeout(timeout)
-
-        mp.process(core.process_session, conn, addr)
-
-def init(address, backlog):
-    logger.info("server starting")
-
-    signal.signal(signal.SIGTERM, _sigterm_handler)
-
-    global _sock
-    _sock = socket.socket()
-    _sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
-    _sock.bind(address)
-    _sock.listen(backlog)
-
-    host, port = address
-    logger.info("listening at address %s:%d", host, port)
-
-def run(timeout, mp):
-    pid = os.getpid()
-    try:
-        _accept_connections(_sock, timeout, mp)
-    finally:
-        if os.getpid() == pid:
-            logger.info("server stopped")
+            task(sock, addr, *args)
+        except Exception:
+            logger.exception("unhandled exception")
+            status = 1
+        finally:
+            logger.debug("process exiting")
+        sys.exit(status)
+    else:
+        num_children += 1
+        sock.close()
