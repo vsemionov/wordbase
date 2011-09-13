@@ -33,8 +33,8 @@ import logging
 import mp
 
 
-num_children = 0
-max_children = 0
+_children = []
+_max_children = 0
 
 logger = logging.getLogger(__name__)
 
@@ -46,23 +46,23 @@ def _sigchld_handler(signum, frame):
     pid, status = os.waitpid(-1, os.WNOHANG)
     del status
     if pid:
-        global num_children
-        num_children -= 1
+        global _children
+        _children.remove(pid)
         logger.debug("child process %d terminated", pid)
 
 def configure(config):
-    global max_children
-    max_children = int(config["max-clients"])
+    global _max_children
+    _max_children = int(config["max-clients"])
 
     signal.signal(signal.SIGCHLD, _sigchld_handler)
 
     logger.debug("initialized")
 
 def process(task, sock, addr, *args):
-    global num_children, max_children
+    global _children, _max_children
 
     overload_logged = False
-    while num_children >= max_children:
+    while len(_children) >= _max_children:
         if not overload_logged:
             logger.warning("max-clients limit exceeded; waiting for a child to terminate")
             overload_logged = True
@@ -81,5 +81,5 @@ def process(task, sock, addr, *args):
             logger.debug("process exiting")
         sys.exit(status)
     else:
-        num_children += 1
+        _children.append(pid)
         sock.close()
