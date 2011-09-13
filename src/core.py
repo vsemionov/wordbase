@@ -30,7 +30,7 @@ import modules
 import net
 import db
 import parser
-import help
+import helpmsg
 
 
 logger = logging.getLogger(__name__)
@@ -48,7 +48,7 @@ def _handle_quit(sio, command):
 
 def _handle_help(sio, command):
     net.write_status(sio, 113, "help text follows")
-    net.write_text(sio, help.help_lines)
+    net.write_text(sio, helpmsg.help_lines)
     net.write_status(sio, 250, "ok")
 
 def _handle_status(sio, command):
