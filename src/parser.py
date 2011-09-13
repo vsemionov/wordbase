@@ -100,17 +100,17 @@ _show_server = CaselessKeyword("SERVER")
 _show_params = _show_db | _show_strat | _show_info | _show_server
 
 _command = _command_string(_command_name(""))
-_command = _command_string(_command_name("DEFINE") + _atom + _word)
-_command = _command_string(_command_name("MATCH") + _atom + _atom + _word)
-_command = _command_string(_command_name("SHOW") + _show_params)
-_command = _command_string(_command_name("CLIENT") + Optional(_text, default=""))
-_command = _command_string(_command_name("STATUS"))
-_command = _command_string(_command_name("HELP"))
-_command = _command_string(_command_name("QUIT"))
-_command = _command_string(_command_name("OPTION") + CaselessKeyword("MIME"))
-_command = _command_string(_command_name("AUTH") + Optional(_text)) # not supported, therefore defined liberally
-_command = _command_string(_command_name("SASLAUTH") + Optional(_text)) # not supported, therefore defined liberally
-_command = _command_string(_command_name("SASLRESP") + Optional(_text)) # not supported, therefore defined liberally
+_command |= _command_string(_command_name("DEFINE") + _atom + _word)
+_command |= _command_string(_command_name("MATCH") + _atom + _atom + _word)
+_command |= _command_string(_command_name("SHOW") + _show_params)
+_command |= _command_string(_command_name("CLIENT") + Optional(_text, default=""))
+_command |= _command_string(_command_name("STATUS"))
+_command |= _command_string(_command_name("HELP"))
+_command |= _command_string(_command_name("QUIT"))
+_command |= _command_string(_command_name("OPTION") + CaselessKeyword("MIME"))
+_command |= _command_string(_command_name("AUTH") + Optional(_text)) # not supported, therefore defined liberally
+_command |= _command_string(_command_name("SASLAUTH") + Optional(_text)) # not supported, therefore defined liberally
+_command |= _command_string(_command_name("SASLRESP") + Optional(_text)) # not supported, therefore defined liberally
 
 _command.parseWithTabs()
 
