@@ -205,5 +205,5 @@ except KeyboardInterrupt:
     pass
 except Exception as ex:
     print("{}: {}".format(ex.__class__.__name__, ex), file=sys.stderr)
-    if logger: logger.exception("Terminating on unhandled exception:")
+    if logger: logger.critical("Terminating on unhandled exception:")
     sys.exit(1)

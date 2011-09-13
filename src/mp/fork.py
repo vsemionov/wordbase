@@ -30,21 +30,15 @@ import signal
 import time
 import logging
 
+import mp
+
 
 num_children = 0
 max_children = 0
 
 logger = logging.getLogger(__name__)
 
-
-class Lock:
-    def _dummy(self, *args):
-        pass
-
-    acquire = _dummy
-    release = _dummy
-    __enter__ = _dummy
-    __exit__ = _dummy
+Lock = mp.DummyLock
 
 
 def _sigchld_handler(signum, frame):

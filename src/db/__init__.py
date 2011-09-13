@@ -22,3 +22,23 @@
 # CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
 # OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+
+
+class BackendError(IOError):
+    pass
+
+class BackendBase:
+    def connect(self):
+        raise NotImplementedError("not implemented")
+
+    def close(self):
+        raise NotImplementedError("not implemented")
+
+    def __enter__(self):
+        return self.connect()
+
+    def __exit__(self, t, v, tb):
+        self.close()
+
+    def __del__(self):
+        self.close()

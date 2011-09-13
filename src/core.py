@@ -26,6 +26,8 @@
 
 import logging
 
+import db
+import modules
 import net
 import parser
 
@@ -46,16 +48,20 @@ def _handle_command(sio, command):
 def _session(sock):
     with net.get_sio(sock) as sio:
         try:
-            _banner(sio)
+            with modules.db.Backend() as backend:
+                _banner(sio)
 
-            end = False
-            while not end:
-                line = net.read_line(sio)
-                correct, command = parser.parse_command(line)
-                if correct:
-                    end = _handle_command(sio, command)
-                else:
-                    _handle_syntax_error(sio, command)
+                end = False
+                while not end:
+                    line = net.read_line(sio)
+                    correct, command = parser.parse_command(line)
+                    if correct:
+                        end = _handle_command(sio, command)
+                    else:
+                        _handle_syntax_error(sio, command)
+        except db.BackendError as be:
+            net.write_status(sio, 420, "Server temporarily unavailable")
+            logger.error(be)
         except (IOError, EOFError, UnicodeDecodeError, BufferError) as ex:
             logger.error(ex)
         except Exception as ex:

@@ -26,8 +26,18 @@
 
 import logging
 
+import db
+
 
 logger = logging.getLogger(__name__)
+
+
+class Backend(db.BackendBase):
+    def connect(self):
+        pass
+
+    def close(self):
+        pass
 
 
 def configure(config):

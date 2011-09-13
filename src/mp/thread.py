@@ -54,7 +54,7 @@ def thread_task(task, sock, addr, *args):
         try:
             task(sock, addr, *args)
         except Exception:
-            logger.exception("Unhandled exception:")
+            logger.critical("Unhandled exception:")
         finally:
             logger.debug("thread exiting")
 
