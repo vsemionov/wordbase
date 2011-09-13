@@ -44,21 +44,25 @@ def _sigterm_handler(signum, frame):
     sys.exit()
 
 def _accept_connections(sock, timeout, mp):
+    prevent_eintr = hasattr(signal, "siginterrupt") and hasattr(signal, "SIGCHLD")
+
     logger.info("waiting for connections")
 
     while True:
         try:
+            if prevent_eintr: signal.siginterrupt(signal.SIGCHLD, True)
             conn, addr = sock.accept()
-
-            host, port = addr
-            logger.debug("accepted connection from address %s:%d", host, port)
-
-            conn.settimeout(timeout)
-
-            mp.process(core.process_session, conn, addr)
+            if prevent_eintr: signal.siginterrupt(signal.SIGCHLD, False)
         except IOError as ioe:
-            if ioe.errno != errno.EINTR:
-                raise
+            if ioe.errno == errno.EINTR: continue
+            else: raise
+
+        host, port = addr
+        logger.debug("accepted connection from address %s:%d", host, port)
+
+        conn.settimeout(timeout)
+
+        mp.process(core.process_session, conn, addr)
 
 def init(address, backlog):
     logger.info("server starting")
