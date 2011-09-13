@@ -74,9 +74,12 @@ _description = _text.copy()
 
 _cmd_found = None
 
-def _cmd_action(t):
-    global _cmd_found
-    _cmd_found = t[0]
+def _get_cmd_action(cmd):
+    def _cmd_action(t):
+        global _cmd_found
+        _cmd_found = cmd
+        return cmd
+    return _cmd_action
 
 _start = StringStart()
 _end = StringEnd()
@@ -84,12 +87,12 @@ _end = StringEnd()
 def _command_string(body):
     return _start + body + _end
 
-def _command_name(name):
-    if name:
-        cmd = CaselessKeyword(name)
-    else:
-        cmd = Empty().setParseAction(lambda t: "")
-    return cmd.addParseAction(_cmd_action)
+def _command_name(name, real=None):
+    cmd = CaselessKeyword(name) if name else Empty()
+    return cmd.setParseAction(_get_cmd_action(real or name))
+
+def _shortcut(s):
+    return Empty().addParseAction(lambda t: s)
 
 
 _show_db = CaselessKeyword("DB") | CaselessKeyword("DATABASES")
@@ -100,13 +103,13 @@ _show_server = CaselessKeyword("SERVER")
 _show_params = _show_db | _show_strat | _show_info | _show_server
 
 _command = _command_string(_command_name(""))
-_command |= _command_string(_command_name("DEFINE") + _atom + _word)
-_command |= _command_string(_command_name("MATCH") + _atom + _atom + _word)
+_command |= _command_string(_command_name("DEFINE") + _atom + _word) | _command_string(_command_name("D", "DEFINE") + _shortcut("*") + _word) | _command_string(_command_name("D", "DEFINE") + _atom + _word)
+_command |= _command_string(_command_name("MATCH") + _atom + _atom + _word) | _command_string(_command_name("M", "MATCH") + _shortcut("*") + _shortcut(".") + _word) | _command_string(_command_name("M", "MATCH") + _shortcut("*") + _atom + _word) | _command_string(_command_name("M", "MATCH") + _atom + _atom + _word)
 _command |= _command_string(_command_name("SHOW") + _show_params)
 _command |= _command_string(_command_name("CLIENT") + Optional(_text, default=""))
-_command |= _command_string(_command_name("STATUS"))
-_command |= _command_string(_command_name("HELP"))
-_command |= _command_string(_command_name("QUIT"))
+_command |= _command_string(_command_name("STATUS")) | _command_string(_command_name("S", "STATUS"))
+_command |= _command_string(_command_name("HELP")) | _command_string(_command_name("H", "HELP"))
+_command |= _command_string(_command_name("QUIT")) | _command_string(_command_name("Q", "QUIT"))
 _command |= _command_string(_command_name("OPTION") + CaselessKeyword("MIME"))
 _command |= _command_string(_command_name("AUTH") + Optional(_text)) # not supported, therefore defined liberally
 _command |= _command_string(_command_name("SASLAUTH") + Optional(_text)) # not supported, therefore defined liberally
@@ -121,7 +124,9 @@ _parser_lock = modules.mp().Lock()
 def parse_command(line):
     with _parser_lock:
         try:
-            return True, _command.parseString(line)
+            results = _command.parseString(line)
+            logger.debug("Parser results: %s", results)
+            return True, results
         except ParseException as pe:
             logger.debug(pe)
             return False, _cmd_found
