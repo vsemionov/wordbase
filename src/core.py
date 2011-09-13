@@ -33,6 +33,10 @@ import parser
 logger = logging.getLogger(__name__)
 
 
+def _banner(sio):
+    msg_id = "<!@*>"
+    net.write_status(sio, 220, "Welcome! {}".format(msg_id))
+
 def _handle_syntax_error(sio, command):
     pass
 
@@ -42,18 +46,18 @@ def _handle_command(sio, command):
 def _session(sock):
     with net.get_sio(sock) as sio:
         try:
+            _banner(sio)
+
             end = False
             while not end:
-                try:
-                    line = net.read_line(sio)
-                    correct, command = parser.parse_command(line)
-                    if correct:
-                        end = _handle_command(sio, command)
-                    else:
-                        _handle_syntax_error(sio, command)
-                except (IOError, EOFError, UnicodeDecodeError, BufferError) as ex:
-                    logger.error(ex)
-                    break
+                line = net.read_line(sio)
+                correct, command = parser.parse_command(line)
+                if correct:
+                    end = _handle_command(sio, command)
+                else:
+                    _handle_syntax_error(sio, command)
+        except (IOError, EOFError, UnicodeDecodeError, BufferError) as ex:
+            logger.error(ex)
         except Exception as ex:
             logger.exception(ex)
 
