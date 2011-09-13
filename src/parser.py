@@ -88,8 +88,8 @@ def _command_name(name):
     if name:
         cmd = CaselessKeyword(name)
     else:
-        cmd = Empty()
-    return cmd.setParseAction(_cmd_action)
+        cmd = Empty().setParseAction(lambda t: "")
+    return cmd.addParseAction(_cmd_action)
 
 
 _show_db = CaselessKeyword("DB") | CaselessKeyword("DATABASES")
