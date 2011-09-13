@@ -28,7 +28,6 @@ import sys
 import os
 import socket
 import signal
-import errno
 import logging
 
 import core
@@ -44,18 +43,10 @@ def _sigterm_handler(signum, frame):
     sys.exit()
 
 def _accept_connections(sock, timeout, mp):
-    prevent_eintr = hasattr(signal, "siginterrupt") and hasattr(signal, "SIGCHLD")
-
     logger.info("waiting for connections")
 
     while True:
-        try:
-            if prevent_eintr: signal.siginterrupt(signal.SIGCHLD, True)
-            conn, addr = sock.accept()
-            if prevent_eintr: signal.siginterrupt(signal.SIGCHLD, False)
-        except IOError as ioe:
-            if ioe.errno == errno.EINTR: continue
-            else: raise
+        conn, addr = sock.accept()
 
         host, port = addr
         logger.debug("accepted connection from address %s:%d", host, port)
