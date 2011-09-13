@@ -29,7 +29,7 @@ import logging
 import modules
 import net
 import db
-import parser
+import cmdparser
 import helpmsg
 
 
@@ -130,7 +130,7 @@ def _session(sock):
                 end = False
                 while not end:
                     line = net.read_line(sio)
-                    correct, command = parser.parse_command(line)
+                    correct, command = cmdparser.parse_command(line)
                     if correct:
                         end = _handle_command(sio, command)
                     else:
