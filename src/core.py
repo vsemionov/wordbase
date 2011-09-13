@@ -26,44 +26,15 @@
 
 import logging
 
-import db
 import modules
 import net
+import db
 import parser
+import help
 
 
 logger = logging.getLogger(__name__)
 
-_help_lines = (
-               "DEFINE database word         -- look up word in database",
-               "MATCH database strategy word -- match word in database using strategy",
-               "SHOW DB                      -- list all accessible databases",
-               "SHOW DATABASES               -- list all accessible databases",
-               "SHOW STRAT                   -- list available matching strategies",
-               "SHOW STRATEGIES              -- list available matching strategies",
-               "SHOW INFO database           -- provide information about the database",
-               "SHOW SERVER                  -- provide site-specific information",
-               "OPTION MIME                  -- use MIME headers",
-               "CLIENT info                  -- identify client to server",
-               "AUTH user string             -- provide authentication information",
-               "STATUS                       -- display timing information",
-               "HELP                         -- display this help information",
-               "QUIT                         -- terminate connection",
-               "",
-               "The following commands are unofficial server extensions for debugging",
-               "only.  You may find them useful if you are using telnet as a client.",
-               "If you are writing a client, you MUST NOT use these commands, since",
-               "they won't be supported on any other server!",
-               "",
-               "D word                       -- DEFINE * word",
-               "D database word              -- DEFINE database word",
-               "M word                       -- MATCH * . word",
-               "M strategy word              -- MATCH * strategy word",
-               "M database strategy word     -- MATCH database strategy word",
-               "S                            -- STATUS",
-               "H                            -- HELP",
-               "Q                            -- QUIT",
-              )
 
 def _null_handler(sio, command):
     pass
@@ -77,7 +48,7 @@ def _handle_quit(sio, command):
 
 def _handle_help(sio, command):
     net.write_status(sio, 113, "help text follows")
-    net.write_text(sio, _help_lines)
+    net.write_text(sio, help.help_lines)
     net.write_status(sio, 250, "ok")
 
 def _handle_status(sio, command):
