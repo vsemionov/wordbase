@@ -125,7 +125,7 @@ def parse_command(line):
     with _parser_lock:
         try:
             results = _command.parseString(line)
-            logger.debug("Parser results: %s", results)
+            logger.debug("parser results: %s", results)
             return True, results
         except ParseException as pe:
             logger.debug(pe)

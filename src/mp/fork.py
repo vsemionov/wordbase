@@ -64,18 +64,22 @@ def process(task, sock, addr, *args):
     overload_logged = False
     while num_children >= max_children:
         if not overload_logged:
-            logger.warning("max-clients limit reached; waiting for a child to terminate")
+            logger.warning("max-clients limit exceeded; waiting for a child to terminate")
             overload_logged = True
         time.sleep(1)
 
     pid = os.fork()
     if pid == 0:
         logger.debug("process started")
+        status = 0
         try:
             task(sock, addr, *args)
+        except Exception:
+            logger.exception("unhandled exception")
+            status = 1
         finally:
             logger.debug("process exiting")
-        sys.exit()
+        sys.exit(status)
     else:
         num_children += 1
         sock.close()

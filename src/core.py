@@ -141,7 +141,7 @@ def _session(sock):
         except (IOError, EOFError, UnicodeDecodeError, BufferError) as ex:
             logger.error(ex)
         except Exception as ex:
-            logger.exception(ex)
+            logger.exception("unexpected error")
 
 def process_session(sock, addr):
     with sock:

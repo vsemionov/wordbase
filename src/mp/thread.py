@@ -54,13 +54,13 @@ def thread_task(task, sock, addr, *args):
         try:
             task(sock, addr, *args)
         except Exception:
-            logger.critical("Unhandled exception:")
+            logger.exception("unhandled exception")
         finally:
             logger.debug("thread exiting")
 
 def process(task, sock, addr, *args):
     if not guard_sem.acquire(False):
-        logger.warning("max-clients limit reached; waiting for a thread to terminate")
+        logger.warning("max-clients limit exceeded; waiting for a thread to terminate")
         guard_sem.acquire()
     guard_sem.release()
 

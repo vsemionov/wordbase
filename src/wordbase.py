@@ -30,7 +30,6 @@ import sys
 import os
 import getopt
 import configparser
-import pwd, grp
 import logging
 
 import log
@@ -43,18 +42,21 @@ PROGRAM_VERSION = "0.1"
 
 logger = None
 
+debug_mode = False
+
 version_info = \
 """{name} {version}
 Copyright (C) 2011 Victor Semionov"""
 
 usage_help = \
-"""Usage: {name} [-f conf_file] [-d command]
+"""Usage: {name} [-f conf_file] [-d command] [-D]
 
 Options:
  -v            print version information and exit
  -h            print this help message and exit
  -f conf_file  read the specified configuration file
  -d            daemon mode
+ -D            debug mode
 
 Daemon control commands:
  start         start daemon
@@ -90,12 +92,20 @@ def drop_privs(wbconfig):
     user = wbconfig["user"]
     group = wbconfig["group"]
 
+    try:
+        import pwd, grp
+    except ImportError:
+        return
+
     uentry = pwd.getpwnam(user)
     uid = uentry[2]
     gid = grp.getgrnam(group)[2] if group else uentry[3]
 
-    os.setgid(gid)
-    os.setuid(uid)
+    try:
+        os.setgid(gid)
+        os.setuid(uid)
+    except AttributeError:
+        return
 
 def start_server(wbconfig, mp):
     import master
@@ -156,7 +166,7 @@ def main():
     daemon = None
 
     try:
-        opts, args = getopt.getopt(sys.argv[1:], "vhf:d:")
+        opts, args = getopt.getopt(sys.argv[1:], "vhf:d:D")
     except getopt.GetoptError as ge:
         print(ge, file=sys.stderr)
         print_help_hint()
@@ -178,6 +188,9 @@ def main():
             conf_path = arg
         elif opt == "-d":
             daemon = arg
+        elif opt == "-D":
+            global debug_mode
+            debug_mode = True
         else:
             assert False, "unhandled option"
 
@@ -201,6 +214,12 @@ try:
 except KeyboardInterrupt:
     pass
 except Exception as ex:
-    print("{}: {}".format(ex.__class__.__name__, ex), file=sys.stderr)
-    if logger: logger.critical("Terminating on unhandled exception:")
+    msg = "terminating on unhandled exception"
+    if logger:
+        logger.critical(msg, exc_info=sys.exc_info())
+    else:
+        if debug_mode:
+            logging.critical(msg, exc_info=sys.exc_info())
+        else:
+            print("{}: {}".format(ex.__class__.__name__, ex), file=sys.stderr)
     sys.exit(1)
