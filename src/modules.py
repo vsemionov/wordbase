@@ -29,9 +29,15 @@ import logging
 
 logger = logging.getLogger(__name__)
 
-mp = None
-db = None
+_mp = None
+_db = None
 
+
+def mp():
+    return _mp
+
+def db():
+    return _db
 
 def _init_module(config, mtype, *args):
     modules_conf = config["modules"]
@@ -47,6 +53,6 @@ def _init_module(config, mtype, *args):
     return mod
 
 def init(config):
-    global mp, db
-    mp = _init_module(config, "mp")
-    db = _init_module(config, "db")
+    global _mp, _db
+    _mp = _init_module(config, "mp")
+    _db = _init_module(config, "db")

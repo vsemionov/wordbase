@@ -80,4 +80,4 @@ def run(timeout, mp):
         _accept_connections(_sock, timeout, mp)
     finally:
         if os.getpid() == pid:
-            logger.info("server terminated")
+            logger.info("server stopped")

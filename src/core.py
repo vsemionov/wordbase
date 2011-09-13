@@ -34,22 +34,127 @@ import parser
 
 logger = logging.getLogger(__name__)
 
+_help_lines = (
+               "DEFINE database word         -- look up word in database",
+               "MATCH database strategy word -- match word in database using strategy",
+               "SHOW DB                      -- list all accessible databases",
+               "SHOW DATABASES               -- list all accessible databases",
+               "SHOW STRAT                   -- list available matching strategies",
+               "SHOW STRATEGIES              -- list available matching strategies",
+               "SHOW INFO database           -- provide information about the database",
+               "SHOW SERVER                  -- provide site-specific information",
+               "OPTION MIME                  -- use MIME headers",
+               "CLIENT info                  -- identify client to server",
+               "AUTH user string             -- provide authentication information",
+               "STATUS                       -- display timing information",
+               "HELP                         -- display this help information",
+               "QUIT                         -- terminate connection",
+               "",
+               "The following commands are unofficial server extensions for debugging",
+               "only.  You may find them useful if you are using telnet as a client.",
+               "If you are writing a client, you MUST NOT use these commands, since",
+               "they won't be supported on any other server!",
+               "",
+               "D word                       -- DEFINE * word",
+               "D database word              -- DEFINE database word",
+               "M word                       -- MATCH * . word",
+               "M strategy word              -- MATCH * strategy word",
+               "M database strategy word     -- MATCH database strategy word",
+               "S                            -- STATUS",
+               "H                            -- HELP",
+               "Q                            -- QUIT",
+              )
 
-def _banner(sio):
+def _null_handler(sio, command):
+    pass
+
+def _not_implemented(sio, command):
+    net.write_status(sio, 502, "Command not implemented")
+
+def _handle_quit(sio, command):
+    net.write_status(sio, 221, "Closing Connection")
+    return True
+
+def _handle_help(sio, command):
+    net.write_status(sio, 113, "help text follows")
+    net.write_text(sio, _help_lines)
+    net.write_status(sio, 250, "ok")
+
+def _handle_status(sio, command):
+    net.write_status(sio, 210, "up")
+
+def _handle_client(sio, command):
+    net.write_status(sio, 250, "ok")
+
+def _show_db(sio):
+    _not_implemented(sio, None)
+
+def _show_strat(sio):
+    _not_implemented(sio, None)
+
+def _show_info(sio, database):
+    _not_implemented(sio, None)
+
+def _show_server(sio):
+    _not_implemented(sio, None)
+
+def _handle_show(sio, command):
+    param = command[1]
+    if param in ["DB", "DATABASES"]:
+        _show_db(sio)
+    elif param in ["STRAT", "STRATEGIES"]:
+        _show_strat(sio)
+    elif param == "INFO":
+        database = command[2]
+        _show_info(sio, database)
+    elif param == "SERVER":
+        _show_server(sio)
+    else:
+        assert False, "unhandled SHOW command"
+
+def _handle_match(sio, command):
+    _not_implemented(sio, command)
+
+def _handle_define(sio, command):
+    _not_implemented(sio, command)
+
+_cmd_handlers = {
+                 "": _null_handler,
+                 "DEFINE": _handle_define,
+                 "MATCH": _handle_match,
+                 "SHOW": _handle_show,
+                 "CLIENT": _handle_client,
+                 "STATUS": _handle_status,
+                 "HELP": _handle_help,
+                 "QUIT": _handle_quit,
+                 "OPTION": _not_implemented,
+                 "AUTH": _not_implemented,
+                 "SASLAUTH": _not_implemented,
+                 "SASLRESP": _not_implemented,
+                }
+
+
+def _send_banner(sio):
     msg_id = "<!@*>"
     net.write_status(sio, 220, "Welcome! {}".format(msg_id))
 
 def _handle_syntax_error(sio, command):
-    pass
+    if not command:
+        code, msg = 500, "Syntax error, command not recognized"
+    else:
+        code, msg = 501, "Syntax error, illegal parameters"
+    net.write_status(sio, code, msg)
 
 def _handle_command(sio, command):
-    pass
+    name = command[0]
+    handler = _cmd_handlers[name]
+    return handler(sio, command)
 
 def _session(sock):
     with net.get_sio(sock) as sio:
         try:
-            with modules.db.Backend() as backend:
-                _banner(sio)
+            with modules.db().Backend() as backend:
+                _send_banner(sio)
 
                 end = False
                 while not end:
@@ -60,8 +165,8 @@ def _session(sock):
                     else:
                         _handle_syntax_error(sio, command)
         except db.BackendError as be:
-            net.write_status(sio, 420, "Server temporarily unavailable")
             logger.error(be)
+            net.write_status(sio, 420, "Server temporarily unavailable")
         except (IOError, EOFError, UnicodeDecodeError, BufferError) as ex:
             logger.error(ex)
         except Exception as ex:

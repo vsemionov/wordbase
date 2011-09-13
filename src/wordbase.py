@@ -129,7 +129,7 @@ def server_control(config, daemon_cmd):
     if daemon_cmd in (None, start_cmd, restart_cmd):
         modules.init(config)
 
-        wbdaemon.run_args = (wbconfig, modules.mp)
+        wbdaemon.run_args = (wbconfig, modules.mp())
 
         if daemon_cmd == start_cmd:
             control_func = wbdaemon.start

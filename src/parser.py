@@ -115,7 +115,7 @@ _command |= _command_string(_command_name("SASLRESP") + Optional(_text)) # not s
 _command.parseWithTabs()
 
 
-_parser_lock = modules.mp.Lock()
+_parser_lock = modules.mp().Lock()
 
 
 def parse_command(line):
