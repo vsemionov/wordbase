@@ -1,3 +1,5 @@
+#!/usr/bin/env python3
+
 # Copyright (C) 2011 Victor Semionov
 # All rights reserved.
 # 
@@ -22,3 +24,57 @@
 # CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
 # OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+
+
+import sys
+import os.path
+
+import psycopg2
+
+
+create_dictionaries = "CREATE TABLE dictionaries (" \
+                        "id SERIAL PRIMARY KEY," \
+                        "name VARCHAR(32) UNIQUE NOT NULL," \
+                        "short VARCHAR(128) NOT NULL," \
+                        "info TEXT NOT NULL" \
+                        ");"
+
+create_definitions = "CREATE TABLE definitions (" \
+                        "id SERIAL PRIMARY KEY," \
+                        "dict_id INTEGER NOT NULL," \
+                        "word VARCHAR(64) NOT NULL," \
+                        "definition TEXT NOT NULL" \
+                        ");"
+
+
+script_name = os.path.basename(__file__)
+
+
+def usage():
+    print("Usage: {} host[:port] user password database [schema]".format(script_name))
+    print("Initializes a wordbase pgsql schema.")
+
+if not 5 <= len(sys.argv) <= 6:
+    usage()
+    sys.exit(2)
+
+host, *port = sys.argv[1].split(':')
+port = int(port[0]) if port else 5432
+user = sys.argv[2]
+password = sys.argv[3]
+database = sys.argv[4]
+schema = sys.argv[5] if len(sys.argv) >= 6 else None
+
+conn = psycopg2.connect(host=host, port=port, user=user, password=password, database=database)
+
+try:
+    conn.autocommit = False
+    cur = conn.cursor()
+    try:
+        cur.execute(create_dictionaries)
+        cur.execute(create_definitions)
+    finally:
+        cur.close()
+    conn.commit()
+finally:
+    conn.close()
