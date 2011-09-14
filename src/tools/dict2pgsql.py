@@ -1,3 +1,5 @@
+#!/usr/bin/env python3
+
 # Copyright (C) 2011 Victor Semionov
 # All rights reserved.
 # 
