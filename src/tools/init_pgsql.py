@@ -32,14 +32,16 @@ import os.path
 import psycopg2
 
 
-create_dictionaries = "CREATE TABLE dictionaries (" \
+create_schema = "CREATE SCHEMA {};"
+
+create_dictionaries = "CREATE TABLE {}.dictionaries (" \
                         "id SERIAL PRIMARY KEY," \
                         "name VARCHAR(32) UNIQUE NOT NULL," \
                         "short VARCHAR(128) NOT NULL," \
                         "info TEXT NOT NULL" \
                         ");"
 
-create_definitions = "CREATE TABLE definitions (" \
+create_definitions = "CREATE TABLE {}.definitions (" \
                         "id SERIAL PRIMARY KEY," \
                         "dict_id INTEGER NOT NULL," \
                         "word VARCHAR(64) NOT NULL," \
@@ -71,8 +73,12 @@ try:
     conn.autocommit = False
     cur = conn.cursor()
     try:
-        cur.execute(create_dictionaries)
-        cur.execute(create_definitions)
+        if schema:
+            cur.execute(create_schema.format(schema))
+        else:
+            schema = "public"
+        cur.execute(create_dictionaries.format(schema))
+        cur.execute(create_definitions.format(schema))
     finally:
         cur.close()
     conn.commit()
