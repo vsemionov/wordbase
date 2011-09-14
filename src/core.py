@@ -61,6 +61,7 @@ def _handle_status(sio, command):
     net.write_status(sio, 210, "up")
 
 def _handle_client(sio, command):
+    logger.info("client: %s", command[1])
     net.write_status(sio, 250, "ok")
 
 def _show_db(sio):
