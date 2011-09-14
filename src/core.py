@@ -24,16 +24,22 @@
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 
+import socket
 import logging
+import random
 
 import modules
 import net
-import db
 import cmdparser
 import helpmsg
+import db
+import match
 
 
 logger = logging.getLogger(__name__)
+
+_server_string = None
+_domain = None
 
 
 def _null_handler(sio, command):
@@ -106,8 +112,9 @@ _cmd_handlers = {
 
 
 def _send_banner(sio):
-    msg_id = "<!@*>"
-    net.write_status(sio, 220, "Welcome! {}".format(msg_id))
+    local = "{}.{}".format(random.randint(0, 9999), random.randint(0, 9999))
+    msg_id = "<{}@{}>".format(local, _domain)
+    net.write_status(sio, 220, "{} {} {}".format(socket.getfqdn(), _server_string, msg_id))
 
 def _handle_syntax_error(sio, command):
     if not command:
@@ -142,6 +149,11 @@ def _session(sock):
             logger.error(ex)
         except Exception as ex:
             logger.exception("unexpected error")
+
+def configure(server, domain):
+    global _server_string, _domain
+    _server_string = server
+    _domain = domain
 
 def process_session(sock, addr):
     with sock:

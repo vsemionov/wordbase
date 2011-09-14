@@ -31,6 +31,7 @@ import os
 import getopt
 import configparser
 import logging
+import random
 
 import log
 import daemon
@@ -134,7 +135,17 @@ def server_control(config, daemon_cmd):
     control_func = None
 
     if daemon_cmd in (None, start_cmd, restart_cmd):
+        random.seed()
+
         modules.init(config)
+
+        import match
+        import core
+
+        print(config)
+        dconfig = config["dict"]
+        match.configure(dconfig["strategies"])
+        core.configure(dconfig["server"], dconfig["domain"])
 
         wbdaemon.run_args = (wbconfig, modules.mp())
 
@@ -203,7 +214,7 @@ def main():
     logger = logging.getLogger(PROGRAM_NAME)
 
     with open(conf_path) as conf:
-        config = configparser.ConfigParser()
+        config = configparser.ConfigParser(inline_comment_prefixes="#")
         config.read_file(conf, conf_path)
 
     server_control(config, daemon)
