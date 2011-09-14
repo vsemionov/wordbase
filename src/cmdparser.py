@@ -77,7 +77,7 @@ _cmd_found = None
 def _get_keyword_action(kw):
     def _keyword_action(s, l, t):
         if t[0].upper() != kw.upper():
-            raise ParseException(s, l, "expected {}".format(kw))
+            raise ParseException(s, l, "expected \"{}\"".format(kw))
         return kw
     return _keyword_action
 
