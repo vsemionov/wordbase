@@ -26,7 +26,7 @@
 
 import logging
 
-from pyparsing import ParseException, ParserElement, Empty, White, Suppress, CharsNotIn, Combine, ZeroOrMore, OneOrMore, Optional, StringStart, StringEnd, CaselessKeyword
+from pyparsing import ParseException, ParserElement, Empty, White, Suppress, CharsNotIn, Combine, ZeroOrMore, OneOrMore, Optional, StringStart, StringEnd
 
 import modules
 
@@ -74,11 +74,20 @@ _description = _text.copy()
 
 _cmd_found = None
 
+def _get_keyword_action(kw):
+    def _keyword_action(s, l, t):
+        if t[0].upper() != kw.upper():
+            raise ParseException(s, l, "expected {}".format(kw))
+        return kw
+    return _keyword_action
+
+def _keyword(kw):
+    return _word.copy().setParseAction(_get_keyword_action(kw))
+
 def _get_cmd_action(cmd):
-    def _cmd_action(t):
+    def _cmd_action(s, l, t):
         global _cmd_found
         _cmd_found = cmd
-        return cmd
     return _cmd_action
 
 _start = StringStart()
@@ -87,35 +96,35 @@ _end = StringEnd()
 def _command_string(body):
     return _start + body + _end
 
-def _command_name(name, real=None):
-    cmd = CaselessKeyword(name) if name else Empty()
-    return cmd.setParseAction(_get_cmd_action(real or name))
+def _command(name, real=None):
+    cmd = _keyword(name) if name else Empty()
+    return cmd.addParseAction(_get_cmd_action(real or name))
 
 def _shortcut(s):
     return Empty().addParseAction(lambda t: s)
 
 
-_show_db = CaselessKeyword("DB") | CaselessKeyword("DATABASES")
-_show_strat = CaselessKeyword("STRAT") | CaselessKeyword("STRATEGIES")
-_show_info = CaselessKeyword("INFO") + _atom
-_show_server = CaselessKeyword("SERVER")
+_show_db = _keyword("DB") | _keyword("DATABASES")
+_show_strat = _keyword("STRAT") | _keyword("STRATEGIES")
+_show_info = _keyword("INFO") + _word
+_show_server = _keyword("SERVER")
 
 _show_params = _show_db | _show_strat | _show_info | _show_server
 
-_command = _command_string(_command_name(""))
-_command |= _command_string(_command_name("DEFINE") + _atom + _word) | _command_string(_command_name("D", "DEFINE") + _shortcut("*") + _word) | _command_string(_command_name("D", "DEFINE") + _atom + _word)
-_command |= _command_string(_command_name("MATCH") + _atom + _atom + _word) | _command_string(_command_name("M", "MATCH") + _shortcut("*") + _shortcut(".") + _word) | _command_string(_command_name("M", "MATCH") + _shortcut("*") + _atom + _word) | _command_string(_command_name("M", "MATCH") + _atom + _atom + _word)
-_command |= _command_string(_command_name("SHOW") + _show_params)
-_command |= _command_string(_command_name("CLIENT") + Optional(_text, default=""))
-_command |= _command_string(_command_name("STATUS")) | _command_string(_command_name("S", "STATUS"))
-_command |= _command_string(_command_name("HELP")) | _command_string(_command_name("H", "HELP"))
-_command |= _command_string(_command_name("QUIT")) | _command_string(_command_name("Q", "QUIT"))
-_command |= _command_string(_command_name("OPTION") + CaselessKeyword("MIME"))
-_command |= _command_string(_command_name("AUTH") + Optional(_text)) # not supported, therefore defined liberally
-_command |= _command_string(_command_name("SASLAUTH") + Optional(_text)) # not supported, therefore defined liberally
-_command |= _command_string(_command_name("SASLRESP") + Optional(_text)) # not supported, therefore defined liberally
+_grammar = _command_string(_command(""))
+_grammar |= _command_string(_command("DEFINE") + _word + _word) | _command_string(_command("D", "DEFINE") + _shortcut("*") + _word) | _command_string(_command("D", "DEFINE") + _word + _word)
+_grammar |= _command_string(_command("MATCH") + _word + _word + _word) | _command_string(_command("M", "MATCH") + _shortcut("*") + _shortcut(".") + _word) | _command_string(_command("M", "MATCH") + _shortcut("*") + _word + _word) | _command_string(_command("M", "MATCH") + _word + _word + _word)
+_grammar |= _command_string(_command("SHOW") + _show_params)
+_grammar |= _command_string(_command("CLIENT") + Optional(_text, default=""))
+_grammar |= _command_string(_command("STATUS")) | _command_string(_command("S", "STATUS"))
+_grammar |= _command_string(_command("HELP")) | _command_string(_command("H", "HELP"))
+_grammar |= _command_string(_command("QUIT")) | _command_string(_command("Q", "QUIT"))
+_grammar |= _command_string(_command("OPTION") + _keyword("MIME"))
+_grammar |= _command_string(_command("AUTH") + Optional(_text)) # not supported, therefore defined liberally
+_grammar |= _command_string(_command("SASLAUTH") + Optional(_text)) # not supported, therefore defined liberally
+_grammar |= _command_string(_command("SASLRESP") + Optional(_text)) # not supported, therefore defined liberally
 
-_command.parseWithTabs()
+_grammar.parseWithTabs()
 
 
 _parser_lock = modules.mp().Lock()
@@ -124,7 +133,7 @@ _parser_lock = modules.mp().Lock()
 def parse_command(line):
     with _parser_lock:
         try:
-            results = _command.parseString(line)
+            results = _grammar.parseString(line)
             logger.debug("parser results: %s", results)
             return True, results
         except ParseException as pe:
