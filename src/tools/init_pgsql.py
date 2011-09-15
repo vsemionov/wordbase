@@ -26,10 +26,11 @@
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 
-import sys
 import os
 
 import psycopg2
+
+import pgutil
 
 
 create_schema = "CREATE SCHEMA {};"
@@ -65,18 +66,10 @@ script_name = os.path.basename(__file__)
 
 
 def usage():
-    print("Usage: {} host[:port] user password database [schema]".format(script_name))
+    print("Usage: {} [-f conf_file]".format(script_name))
     print("Initializes a wordbase pgsql schema.")
 
-if not 5 <= len(sys.argv) <= 6:
-    usage()
-    sys.exit(2)
-
-host, *port = sys.argv[1].split(':'); port = int(port[0]) if port else 5432
-user = sys.argv[2]
-password = sys.argv[3]
-database = sys.argv[4]
-schema = sys.argv[5] if len(sys.argv) >= 6 else None
+host, port, user, password, database, schema, args = pgutil.get_pgsql_params(None, 0, usage)
 
 conn = psycopg2.connect(host=host, port=port, user=user, password=password, database=database)
 
@@ -84,10 +77,8 @@ try:
     conn.autocommit = False
     cur = conn.cursor()
     try:
-        if schema is not None:
+        if schema != "public":
             cur.execute(create_schema.format(schema))
-        else:
-            schema = "public"
         cur.execute(create_dictionaries.format(schema))
         cur.execute(create_definitions.format(schema))
         cur.execute(create_virtual_dictionaries.format(schema))

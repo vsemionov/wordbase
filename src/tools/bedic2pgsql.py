@@ -26,10 +26,11 @@
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 
-import sys
 import os
 
 import psycopg2
+
+import pgutil
 
 
 insert_dictionary = "INSERT INTO {}.dictionaries (match_order, name, short_desc, info) " \
@@ -46,23 +47,10 @@ script_name = os.path.basename(__file__)
 
 
 def usage():
-    print("Usage: {} dict_file name short_desc info_file host[:port] user password database [schema]".format(script_name))
+    print("Usage: {} [-f conf_file] name short_desc info_file dict_file".format(script_name))
     print("Imports a bedic dictionary into pgsql.")
 
-if not 9 <= len(sys.argv) <= 10:
-    usage()
-    sys.exit(2)
-
-dict_file = sys.argv[1]
-name = sys.argv[2]
-short_desc = sys.argv[3]
-info_file = sys.argv[4]
-
-host, *port = sys.argv[5].split(':'); port = int(port[0]) if port else 5432
-user = sys.argv[6]
-password = sys.argv[7]
-database = sys.argv[8]
-schema = sys.argv[9] if len(sys.argv) >= 10 else "public"
+host, port, user, password, database, schema, name, short_desc, info_file, dict_file = pgutil.get_pgsql_params(None, 4, usage)
 
 with open(info_file, encoding="cp1251") as f:
     info = f.read()
