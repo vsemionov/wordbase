@@ -43,7 +43,7 @@ def get_pgsql_params(fmt, nargs, usage):
         usage()
         sys.exit(2)
 
-    if len(args) != nargs:
+    if nargs >= 0 and len(args) != nargs:
         usage()
         sys.exit(2)
 
