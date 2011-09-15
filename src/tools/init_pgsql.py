@@ -36,14 +36,15 @@ create_schema = "CREATE SCHEMA {};"
 
 create_dictionaries = "CREATE TABLE {}.dictionaries (" \
                         "id SERIAL PRIMARY KEY," \
+                        "match_order INTEGER," \
                         "name VARCHAR(32) UNIQUE NOT NULL," \
-                        "short VARCHAR(128) NOT NULL," \
+                        "short_desc VARCHAR(128) NOT NULL," \
                         "info TEXT NOT NULL" \
                         ");"
 
-create_definitions = "CREATE TABLE {}.definitions (" \
+create_definitions = "CREATE TABLE {0}.definitions (" \
                         "id SERIAL PRIMARY KEY," \
-                        "dict_id INTEGER NOT NULL," \
+                        "dict_id INTEGER NOT NULL REFERENCES {0}.dictionaries," \
                         "word VARCHAR(64) NOT NULL," \
                         "definition TEXT NOT NULL" \
                         ");"
