@@ -27,7 +27,7 @@
 
 
 import sys
-import os.path
+import os
 
 import psycopg2
 
@@ -35,17 +35,17 @@ import psycopg2
 create_schema = "CREATE SCHEMA {};"
 
 create_dictionaries = "CREATE TABLE {}.dictionaries (" \
-                        "id SERIAL PRIMARY KEY," \
-                        "match_order INTEGER," \
-                        "name VARCHAR(32) UNIQUE NOT NULL," \
-                        "short_desc VARCHAR(128) NOT NULL," \
+                        "id SERIAL PRIMARY KEY, " \
+                        "match_order INTEGER, " \
+                        "name VARCHAR(32) UNIQUE NOT NULL, " \
+                        "short_desc VARCHAR(128) NOT NULL, " \
                         "info TEXT NOT NULL" \
                         ");"
 
 create_definitions = "CREATE TABLE {0}.definitions (" \
-                        "id SERIAL PRIMARY KEY," \
-                        "dict_id INTEGER NOT NULL REFERENCES {0}.dictionaries," \
-                        "word VARCHAR(64) NOT NULL," \
+                        "id SERIAL PRIMARY KEY, " \
+                        "dict_id INTEGER NOT NULL REFERENCES {0}.dictionaries, " \
+                        "word VARCHAR(64) NOT NULL, " \
                         "definition TEXT NOT NULL" \
                         ");"
 
@@ -61,8 +61,7 @@ if not 5 <= len(sys.argv) <= 6:
     usage()
     sys.exit(2)
 
-host, *port = sys.argv[1].split(':')
-port = int(port[0]) if port else 5432
+host, *port = sys.argv[1].split(':'); port = int(port[0]) if port else 5432
 user = sys.argv[2]
 password = sys.argv[3]
 database = sys.argv[4]
@@ -74,7 +73,7 @@ try:
     conn.autocommit = False
     cur = conn.cursor()
     try:
-        if schema:
+        if schema is not None:
             cur.execute(create_schema.format(schema))
         else:
             schema = "public"
