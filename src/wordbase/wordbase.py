@@ -90,8 +90,8 @@ def print_help_hint():
     print(help_hint.format(name=PROGRAM_NAME), file=sys.stderr)
 
 def drop_privs(wbconfig):
-    user = wbconfig["user"]
-    group = wbconfig["group"]
+    user = wbconfig.get("user", "nobody")
+    group = wbconfig.get("group", "")
 
     try:
         import pwd, grp
@@ -111,10 +111,10 @@ def drop_privs(wbconfig):
 def start_server(wbconfig, mp):
     import master
 
-    host = wbconfig["host"]
-    port = int(wbconfig["port"])
-    backlog = int(wbconfig["backlog"])
-    timeout = int(wbconfig["timeout"])
+    host = wbconfig.get("host", "0.0.0.0")
+    port = wbconfig.getint("port", 2628)
+    backlog = wbconfig.getint("backlog", 512)
+    timeout = wbconfig.getint("timeout", 60)
     address = (host, port)
 
     master.init(address, backlog)
@@ -130,7 +130,7 @@ def server_control(config, daemon_cmd):
 
     wbconfig = config["wordbase"]
 
-    pidfile = wbconfig["pidfile"]
+    pidfile = wbconfig.get("pidfile", "/var/run/" + PROGRAM_NAME + ".pid")
     wbdaemon = WBDaemon(PROGRAM_NAME, pidfile, start_server)
     control_func = None
 
@@ -142,10 +142,9 @@ def server_control(config, daemon_cmd):
         import match
         import core
 
-        print(config)
         dconfig = config["dict"]
-        match.configure(dconfig["strategies"])
-        core.configure(dconfig["server"], dconfig["domain"])
+        match.configure(dconfig)
+        core.configure(dconfig)
 
         wbdaemon.run_args = (wbconfig, modules.mp())
 

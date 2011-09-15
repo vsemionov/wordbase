@@ -39,9 +39,9 @@ def mp():
 def db():
     return _db
 
-def _init_module(config, mtype, *args):
+def _init_module(config, mtype, defmod, *args):
     modules_conf = config["modules"]
-    mname = modules_conf[mtype]
+    mname = modules_conf.get(mtype, defmod)
     mconf = config[mname]
     fullname = mtype + "." + mname
 
@@ -54,5 +54,5 @@ def _init_module(config, mtype, *args):
 
 def init(config):
     global _mp, _db
-    _mp = _init_module(config, "mp")
-    _db = _init_module(config, "db")
+    _mp = _init_module(config, "mp", "thread")
+    _db = _init_module(config, "db", "pgsql")

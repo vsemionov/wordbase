@@ -52,7 +52,7 @@ def _sigchld_handler(signum, frame):
 
 def configure(config):
     global _max_children
-    _max_children = int(config["max-clients"])
+    _max_children = config.getint("max-clients", 20)
 
     signal.signal(signal.SIGCHLD, _sigchld_handler)
 

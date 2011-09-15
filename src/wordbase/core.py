@@ -151,10 +151,10 @@ def _session(sock):
         except Exception as ex:
             logger.exception("unexpected error")
 
-def configure(server, domain):
+def configure(config):
     global _server_string, _domain
-    _server_string = server
-    _domain = domain
+    _server_string = config.get("server", "wordbase")
+    _domain = config.get("domain", "example.com")
 
 def process_session(sock, addr):
     with sock:

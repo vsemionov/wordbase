@@ -40,7 +40,7 @@ Lock = threading.Lock
 
 def configure(config):
     global max_threads, guard_sem
-    max_threads = int(config["max-clients"])
+    max_threads = config.getint("max-clients", 20)
     guard_sem = threading.Semaphore(max_threads)
 
     logger.debug("initialized")

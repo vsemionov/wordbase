@@ -24,5 +24,5 @@
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 
-def configure(strategies):
-    pass
+def configure(config):
+    config.get("strategies", "")
