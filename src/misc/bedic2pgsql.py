@@ -64,11 +64,14 @@ password = sys.argv[7]
 database = sys.argv[8]
 schema = sys.argv[9] if len(sys.argv) >= 10 else "public"
 
-with open(dict_file, "r", encoding="cp1251", newline='\n') as f:
-    defs = sorted(f.read().split('\0')[1:-1])
-
 with open(info_file, encoding="cp1251") as f:
     info = f.read()
+
+with open(dict_file, "r", encoding="cp1251", newline='\n') as f:
+    defs = [d.split('\n', 1) for d in f.read().split('\0')[1:-1]]
+
+defs.sort(key=lambda d: d[1])
+defs.sort(key=lambda d: d[0])
 
 conn = psycopg2.connect(host=host, port=port, user=user, password=password, database=database)
 
@@ -83,8 +86,7 @@ try:
 
         cur.execute(prepare_insert_definition.format(schema), (dict_id, ))
 
-        for d in defs:
-            word, definition = d.split('\n', 1)
+        for word, definition in defs:
             cur.execute(execute_insert_definition, (word, definition))
 
         print("{} definitions imported".format(len(defs)))
