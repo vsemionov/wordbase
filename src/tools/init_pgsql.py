@@ -49,6 +49,17 @@ create_definitions = "CREATE TABLE {0}.definitions (" \
                         "definition TEXT NOT NULL" \
                         ");"
 
+create_virtual_dictionaries = "CREATE TABLE {}.virtual_dictionaries (" \
+                                "id SERIAL PRIMARY KEY, " \
+                                "name VARCHAR(32) UNIQUE NOT NULL, " \
+                                "short_desc VARCHAR(128) NOT NULL" \
+                                ");" \
+
+create_virtual_dictionary_items = "CREATE TABLE {0}.virtual_dictionary_items (" \
+                                    "virt_id INTEGER NOT NULL REFERENCES {0}.virtual_dictionaries, " \
+                                    "dict_id INTEGER NOT NULL REFERENCES {0}.dictionaries, " \
+                                    "PRIMARY KEY (virt_id, dict_id)" \
+                                    ");" \
 
 script_name = os.path.basename(__file__)
 
@@ -79,6 +90,8 @@ try:
             schema = "public"
         cur.execute(create_dictionaries.format(schema))
         cur.execute(create_definitions.format(schema))
+        cur.execute(create_virtual_dictionaries.format(schema))
+        cur.execute(create_virtual_dictionary_items.format(schema))
     finally:
         cur.close()
     conn.commit()
