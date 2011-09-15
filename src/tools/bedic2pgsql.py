@@ -26,10 +26,12 @@
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 
+import sys
 import os
 
 import psycopg2
 
+import wbutil
 import pgutil
 
 
@@ -47,12 +49,16 @@ script_name = os.path.basename(__file__)
 
 
 def usage():
-    print("Usage: {} [-f conf_file] name short_desc info_file dict_file".format(script_name))
-    print("Imports a bedic dictionary into pgsql.")
+    print("Usage: {} [-f conf_file] name short_desc info_file dict_file".format(script_name), file=sys.stderr)
+    print("Imports a bedic dictionary into pgsql.", file=sys.stderr)
 
 host, port, user, password, database, schema, (name, short_desc, info_file, dict_file) = pgutil.get_pgsql_params(None, 4, usage)
 
-with open(info_file, encoding="cp1251") as f:
+if not wbutil.validate_dict_name(name):
+    print("dictionary names may not contain control characters (including tabs), spaces, single or double quotes, or backslashes", file=sys.stderr)
+    sys.exit(2)
+
+with open(info_file, encoding="utf-8") as f:
     info = f.read()
 
 with open(dict_file, "r", encoding="cp1251", newline='\n') as f:

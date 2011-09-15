@@ -26,6 +26,7 @@
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 
+import sys
 import os
 
 import psycopg2
@@ -66,8 +67,8 @@ script_name = os.path.basename(__file__)
 
 
 def usage():
-    print("Usage: {} [-f conf_file]".format(script_name))
-    print("Initializes a wordbase pgsql schema.")
+    print("Usage: {} [-f conf_file]".format(script_name), file=sys.stderr)
+    print("Initializes a wordbase pgsql schema.", file=sys.stderr)
 
 host, port, user, password, database, schema, args = pgutil.get_pgsql_params(None, 0, usage)
 
