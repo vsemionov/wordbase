@@ -41,6 +41,8 @@ PROGRAM_NAME = "wordbase"
 PROGRAM_VERSION = "0.1"
 
 
+script_name = os.path.basename(__file__)
+
 logger = None
 
 debug_mode = False
@@ -81,13 +83,13 @@ def get_default_conf_path():
     return "/etc/" + PROGRAM_NAME + ".conf"
 
 def print_usage():
-    print(usage_help.format(name=PROGRAM_NAME))
+    print(usage_help.format(name=script_name))
 
 def print_version():
     print(version_info.format(name=PROGRAM_NAME, version=PROGRAM_VERSION))
 
 def print_help_hint():
-    print(help_hint.format(name=PROGRAM_NAME), file=sys.stderr)
+    print(help_hint.format(name=script_name), file=sys.stderr)
 
 def drop_privs(wbconfig):
     user = wbconfig.get("user", "nobody")
