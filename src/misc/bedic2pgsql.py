@@ -71,7 +71,7 @@ with open(dict_file, "r", encoding="cp1251", newline='\n') as f:
     defs = [d.split('\n', 1) for d in f.read().split('\0')[1:-1]]
 
 defs.sort(key=lambda d: d[1])
-defs.sort(key=lambda d: d[0])
+defs.sort(key=lambda d: d[0].lower())
 
 conn = psycopg2.connect(host=host, port=port, user=user, password=password, database=database)
 
