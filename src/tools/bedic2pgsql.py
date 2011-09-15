@@ -50,7 +50,7 @@ def usage():
     print("Usage: {} [-f conf_file] name short_desc info_file dict_file".format(script_name))
     print("Imports a bedic dictionary into pgsql.")
 
-host, port, user, password, database, schema, name, short_desc, info_file, dict_file = pgutil.get_pgsql_params(None, 4, usage)
+host, port, user, password, database, schema, (name, short_desc, info_file, dict_file) = pgutil.get_pgsql_params(None, 4, usage)
 
 with open(info_file, encoding="cp1251") as f:
     info = f.read()
