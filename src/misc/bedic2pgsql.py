@@ -24,3 +24,72 @@
 # CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
 # OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+
+
+import sys
+import os
+
+import psycopg2
+
+
+insert_dictionary = "INSERT INTO {}.dictionaries (match_order, name, short_desc, info) " \
+                    "VALUES (NULL, %s, %s, %s);"
+
+select_dict_id = "SELECT id FROM {}.dictionaries WHERE name = %s;"
+
+prepare_insert_definition = "PREPARE insert_definition(VARCHAR(64), TEXT) AS " \
+                            "INSERT INTO {}.definitions (dict_id, word, definition) VALUES (%s, $1, $2);"
+
+execute_insert_definition = "EXECUTE insert_definition(%s, %s);"
+
+script_name = os.path.basename(__file__)
+
+
+def usage():
+    print("Usage: {} dict_file name short_desc info_file host[:port] user password database [schema]".format(script_name))
+    print("Imports a bedic dictionary into pgsql.")
+
+if not 9 <= len(sys.argv) <= 10:
+    usage()
+    sys.exit(2)
+
+dict_file = sys.argv[1]
+name = sys.argv[2]
+short_desc = sys.argv[3]
+info_file = sys.argv[4]
+
+host, *port = sys.argv[5].split(':'); port = int(port[0]) if port else 5432
+user = sys.argv[6]
+password = sys.argv[7]
+database = sys.argv[8]
+schema = sys.argv[9] if len(sys.argv) >= 10 else "public"
+
+with open(dict_file, "r", encoding="cp1251", newline='\n') as f:
+    defs = sorted(f.read().split('\0')[1:-1])
+
+with open(info_file, encoding="cp1251") as f:
+    info = f.read()
+
+conn = psycopg2.connect(host=host, port=port, user=user, password=password, database=database)
+
+try:
+    conn.autocommit = False
+    cur = conn.cursor()
+    try:
+        cur.execute(insert_dictionary.format(schema), (name, short_desc, info))
+
+        cur.execute(select_dict_id.format(schema), (name, ))
+        dict_id = cur.fetchone()[0]
+
+        cur.execute(prepare_insert_definition.format(schema), (dict_id, ))
+
+        for d in defs:
+            word, definition = d.split('\n', 1)
+            cur.execute(execute_insert_definition, (word, definition))
+
+        print("{} definitions imported".format(len(defs)))
+    finally:
+        cur.close()
+    conn.commit()
+finally:
+    conn.close()
