@@ -54,9 +54,7 @@ def usage():
 
 host, port, user, password, database, schema, (name, short_desc, info_file, dict_file) = pgutil.get_pgsql_params(None, 4, usage)
 
-if not wbutil.validate_dict_name(name):
-    print("dictionary names may not contain control characters (including tabs), spaces, single or double quotes, or backslashes", file=sys.stderr)
-    sys.exit(2)
+wbutil.validate_dict_name(name)
 
 with open(info_file, encoding="utf-8") as f:
     info = f.read()

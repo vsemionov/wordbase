@@ -26,10 +26,14 @@
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 
+import sys
+
+
 CTL = ''.join(chr(i) for i in range(0, 32)) + chr(127)
 WORD_EXCEPT = CTL + " '\"\\"
 
 
 def validate_dict_name(name):
-    valid = True not in [c in name for c in WORD_EXCEPT]
-    return valid
+    if True in [c in name for c in WORD_EXCEPT]:
+        print("dictionary names may not contain control characters (including tabs), spaces, single or double quotes, or backslashes", file=sys.stderr)
+        sys.exit(2)
