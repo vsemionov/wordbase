@@ -51,7 +51,7 @@ script_name = os.path.basename(__file__)
 
 
 def usage():
-    print("Usage: {} [-f conf_file] virt_name short_desc dict_name [...]", file=sys.stderr)
+    print("Usage: {} [-f conf_file] virt_name short_desc dict_name dict_name [...]", file=sys.stderr)
     print("Adds virtual dictionaries in pgsql.", file=sys.stderr)
 
 def add_vdict(cur, schema, db_order, virt_name, short_desc, info, dict_names):
@@ -62,7 +62,7 @@ def add_vdict(cur, schema, db_order, virt_name, short_desc, info, dict_names):
     for dict_name in dict_names:
         cur.execute(execute_insert_virtual_dictionary, (dict_name, ))
 
-options, args = pgutil.get_pgsql_params("o:i:", 3, None, usage)
+options, args = pgutil.get_pgsql_params("o:i:", 4, None, usage)
 
 db_order = options.get("-o")
 if db_order is not None:
