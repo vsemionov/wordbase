@@ -45,7 +45,7 @@ def usage():
     print("Removes wordbase dictionaries from pgsql.", file=sys.stderr)
 
 def del_pgsql_task(cur, schema, dict_names):
-    cur.execute(delete_dictionary.format(schema), (dict_names, ))
+    cur.execute(delete_dictionary.format(schema), (tuple(dict_names), ))
 
 
 options, dict_names = pgutil.get_pgsql_params(None, 1, None, usage)
