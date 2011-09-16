@@ -36,13 +36,21 @@ import pgutil
 
 create_schema = "CREATE SCHEMA {};"
 
-create_dictionaries = "CREATE TABLE {}.dictionaries (" \
+create_dictionaries_base = "CREATE TABLE {}.dictionaries_base (" \
+                            "id SERIAL PRIMARY KEY, " \
+                            "name VARCHAR(32) UNIQUE NOT NULL, " \
+                            "short_desc VARCHAR(128) NOT NULL" \
+                            ");"
+
+create_dictionaries = "CREATE TABLE {0}.dictionaries (" \
                         "id SERIAL PRIMARY KEY, " \
                         "match_order INTEGER, " \
-                        "name VARCHAR(32) UNIQUE NOT NULL, " \
-                        "short_desc VARCHAR(128) NOT NULL, " \
                         "info TEXT" \
-                        ");"
+                        ") INHERITS ({0}.dictionaries_base);"
+
+create_virtual_dictionaries = "CREATE TABLE {0}.virtual_dictionaries (" \
+                                "id SERIAL PRIMARY KEY" \
+                                ") INHERITS ({0}.dictionaries_base);" \
 
 create_definitions = "CREATE TABLE {0}.definitions (" \
                         "id SERIAL PRIMARY KEY, " \
@@ -50,12 +58,6 @@ create_definitions = "CREATE TABLE {0}.definitions (" \
                         "word VARCHAR(64) NOT NULL, " \
                         "definition TEXT NOT NULL" \
                         ");"
-
-create_virtual_dictionaries = "CREATE TABLE {}.virtual_dictionaries (" \
-                                "id SERIAL PRIMARY KEY, " \
-                                "name VARCHAR(32) UNIQUE NOT NULL, " \
-                                "short_desc VARCHAR(128) NOT NULL" \
-                                ");" \
 
 create_virtual_dictionary_items = "CREATE TABLE {0}.virtual_dictionary_items (" \
                                     "virt_id INTEGER NOT NULL REFERENCES {0}.virtual_dictionaries, " \
@@ -73,9 +75,10 @@ def usage():
 def init_pgsql_task(cur, schema):
     if schema != "public":
         cur.execute(create_schema.format(schema))
+    cur.execute(create_dictionaries_base.format(schema))
     cur.execute(create_dictionaries.format(schema))
-    cur.execute(create_definitions.format(schema))
     cur.execute(create_virtual_dictionaries.format(schema))
+    cur.execute(create_definitions.format(schema))
     cur.execute(create_virtual_dictionary_items.format(schema))
 
 
