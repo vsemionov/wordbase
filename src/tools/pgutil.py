@@ -51,9 +51,12 @@ def get_pgsql_params(fmt, nargs, usage):
         sys.exit(2)
 
     conf_path = None
+    options = {}
     for opt, arg in opts:
         if opt == "-f":
             conf_path = arg
+        else:
+            options[opt] = arg
 
     if conf_path is None:
         conf_path = get_default_conf_path()
@@ -72,7 +75,7 @@ def get_pgsql_params(fmt, nargs, usage):
     _database = pgconfig.get("database", "wordbase")
     _schema = pgconfig.get("schema", "") or "public"
 
-    return args
+    return options, args if fmt else args
 
 def process_pgsql_task(task, *args):
     conn = psycopg2.connect(host=_host, port=_port, user=_user, password=_password, database=_database)

@@ -36,7 +36,7 @@ import pgutil
 
 
 insert_dictionary = "INSERT INTO {}.dictionaries (match_order, name, short_desc, info) " \
-                    "VALUES (NULL, %s, %s, %s);"
+                    "VALUES (%s, %s, %s, %s);"
 
 select_dict_id = "SELECT id FROM {}.dictionaries WHERE name = %s;"
 
@@ -50,11 +50,11 @@ script_name = os.path.basename(__file__)
 
 
 def usage():
-    print("Usage: {} [-f conf_file] name short_desc info_file dict_file".format(script_name), file=sys.stderr)
+    print("Usage: {} [-f conf_file] [-m match_order] name short_desc info_file dict_file".format(script_name), file=sys.stderr)
     print("Imports a bedic dictionary into pgsql.", file=sys.stderr)
 
-def bedic2pgsql_task(cur, schema, name, short_desc, info, defs):
-    cur.execute(insert_dictionary.format(schema), (name, short_desc, info))
+def bedic2pgsql_task(cur, schema, match_order, name, short_desc, info, defs):
+    cur.execute(insert_dictionary.format(schema), (match_order, name, short_desc, info))
 
     cur.execute(select_dict_id.format(schema), (name, ))
     dict_id = cur.fetchone()[0]
@@ -67,7 +67,15 @@ def bedic2pgsql_task(cur, schema, name, short_desc, info, defs):
     print("{} definitions imported".format(len(defs)))
 
 
-name, short_desc, info_file, dict_file = pgutil.get_pgsql_params(None, 4, usage)
+options, (name, short_desc, info_file, dict_file) = pgutil.get_pgsql_params("m:", 4, usage)
+
+match_order = options.get("-m")
+if match_order is not None:
+    try:
+        match_order = int(match_order)
+    except ValueError:
+        print("match_order must be a decimal integer", file=sys.stderr)
+        exit(2)
 
 wbutil.validate_dict_name(name)
 
@@ -80,4 +88,4 @@ with open(dict_file, "r", encoding="cp1251", newline='\n') as f:
 defs.sort(key=lambda d: d[1])
 defs.sort(key=lambda d: d[0].lower())
 
-pgutil.process_pgsql_task(bedic2pgsql_task, name, short_desc, info, defs)
+pgutil.process_pgsql_task(bedic2pgsql_task, match_order, name, short_desc, info, defs)
