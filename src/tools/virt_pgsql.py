@@ -34,15 +34,6 @@ import psycopg2
 import pgutil
 
 
-delete_virtual_dictionary_items = "DELETE FROM {0}.virtual_dictionary_items " \
-                                    "WHERE virt_id = (" \
-                                        "SELECT id FROM {0}.virtual_dictionaries " \
-                                            "WHERE name = %s" \
-                                        ");"
-
-delete_virtual_dictionary = "DELETE FROM {}.virtual_dictionaries " \
-                                "WHERE name = %s;"
-
 insert_virtual_dictionary = "INSERT INTO {}.virtual_dictionaries (name, short_desc) " \
                                 "VALUES (%s, %s);"
 
@@ -60,10 +51,8 @@ script_name = os.path.basename(__file__)
 
 
 def usage():
-    print("Usage:", file=sys.stderr)
-    print("    {} [-f conf_file] add virt_name short_desc dict_name [...]".format(script_name), file=sys.stderr)
-    print("    {} [-f conf_file] del virt_name".format(script_name), file=sys.stderr)
-    print("Manages virtual dictionaries in pgsql.", file=sys.stderr)
+    print("Usage: {} [-f conf_file] del virt_name", file=sys.stderr)
+    print("Adds virtual dictionaries in pgsql.", file=sys.stderr)
 
 def add_vdict(cur, schema, name, short_desc, dict_names):
     cur.execute(insert_virtual_dictionary.format(schema), (name, short_desc))
@@ -72,10 +61,6 @@ def add_vdict(cur, schema, name, short_desc, dict_names):
     cur.execute(prepare_insert_virtual_dictionary_items.format(schema), (virt_id, ))
     for dict_name in dict_names:
         cur.execute(execute_insert_virtual_dictionary_items, (dict_name, ))
-
-def del_vdict(cur, schema, name):
-    cur.execute(delete_virtual_dictionary_items.format(schema), (name, ))
-    cur.execute(delete_virtual_dictionary.format(schema), (name, ))
 
 args = pgutil.get_pgsql_params(None, -1, usage)
 
@@ -86,17 +71,8 @@ if len(args) < 2:
 cmd_cased, virt_name, *cmd_args = args
 cmd = cmd_cased.lower()
 
-if cmd == "add":
-    if len(cmd_args) < 2:
-        usage()
-        sys.exit(2)
-    short_desc, *dict_names = cmd_args
-    pgutil.process_pgsql_task(add_vdict, virt_name, short_desc, dict_names)
-elif cmd == "del":
-    if len(cmd_args):
-        usage()
-        sys.exit(2)
-    pgutil.process_pgsql_task(del_vdict, virt_name)
-else:
+if len(cmd_args) < 2:
     usage()
     sys.exit(2)
+short_desc, *dict_names = cmd_args
+pgutil.process_pgsql_task(add_vdict, virt_name, short_desc, dict_names)

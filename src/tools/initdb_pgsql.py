@@ -44,7 +44,7 @@ create_dictionaries = "CREATE TABLE {}.dictionaries (" \
                         "name VARCHAR(32) UNIQUE NOT NULL CHECK (name ~ '^[^ ''\"\\\\\\\\]+$'), " \
                         "short_desc VARCHAR(128) NOT NULL, " \
                         "info TEXT, " \
-                        "CHECK ((dict_id IS NOT NULL AND virt_id IS NULL) OR (dict_id IS NULL AND virt_id IS NOT NULL AND info IS NULL))" \
+                        "CHECK ((dict_id IS NOT NULL AND virt_id IS NULL) OR (dict_id IS NULL AND virt_id IS NOT NULL))" \
                         ");"
 
 create_definitions = "CREATE TABLE {0}.definitions (" \
