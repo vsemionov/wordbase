@@ -50,7 +50,7 @@ script_name = os.path.basename(__file__)
 
 
 def usage():
-    print("Usage: {} [-f conf_file] [-m match_order] name short_desc info_file dict_file".format(script_name), file=sys.stderr)
+    print("Usage: {} [-f conf_file] [-m match_order] [-i info_file] name short_desc dict_file".format(script_name), file=sys.stderr)
     print("Imports a bedic dictionary into pgsql.", file=sys.stderr)
 
 def bedic2pgsql_task(cur, schema, match_order, name, short_desc, info, defs):
@@ -67,20 +67,21 @@ def bedic2pgsql_task(cur, schema, match_order, name, short_desc, info, defs):
     print("{} definitions imported".format(len(defs)))
 
 
-options, (name, short_desc, info_file, dict_file) = pgutil.get_pgsql_params("m:", 4, usage)
+options, (name, short_desc, dict_file) = pgutil.get_pgsql_params("m:i:", 4, usage)
 
 match_order = options.get("-m")
 if match_order is not None:
-    try:
-        match_order = int(match_order)
-    except ValueError:
-        print("match_order must be a decimal integer", file=sys.stderr)
-        exit(2)
+    match_order = int(match_order)
+
+info_file = options.get("-i")
 
 wbutil.validate_dict_name(name)
 
-with open(info_file, encoding="utf-8") as f:
-    info = f.read()
+if info_file is not None:
+    with open(info_file, encoding="utf-8") as f:
+        info = f.read()
+else:
+    info = None
 
 with open(dict_file, "r", encoding="cp1251", newline='\n') as f:
     defs = [d.split('\n', 1) for d in f.read().split('\0')[1:-1]]
