@@ -40,11 +40,11 @@ create_dictionaries = "CREATE TABLE {}.dictionaries (" \
                         "id SERIAL PRIMARY KEY, " \
                         "dict_id SERIAL UNIQUE, " \
                         "virt_id SERIAL UNIQUE, " \
+                        "db_order INTEGER, " \
                         "name VARCHAR(32) UNIQUE NOT NULL CHECK (name ~ '^[^ ''\"\\\\\\\\]+$'), " \
-                        "short_desc VARCHAR(128), " \
-                        "match_order INTEGER, " \
+                        "short_desc VARCHAR(128) NOT NULL, " \
                         "info TEXT, " \
-                        "CHECK ((dict_id IS NOT NULL AND virt_id IS NULL) OR (dict_id IS NULL AND virt_id IS NOT NULL AND match_order IS NULL AND info IS NULL))" \
+                        "CHECK ((dict_id IS NOT NULL AND virt_id IS NULL) OR (dict_id IS NULL AND virt_id IS NOT NULL AND info IS NULL))" \
                         ");"
 
 create_definitions = "CREATE TABLE {0}.definitions (" \
