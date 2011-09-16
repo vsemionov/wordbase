@@ -41,8 +41,8 @@ create_dictionaries = "CREATE TABLE {}.dictionaries (" \
                         "dict_id SERIAL UNIQUE, " \
                         "virt_id SERIAL UNIQUE, " \
                         "name VARCHAR(32) UNIQUE NOT NULL CHECK (name ~ '^[^ ''\"\\\\\\\\]+$'), " \
-                        "match_order INTEGER, " \
                         "short_desc VARCHAR(128), " \
+                        "match_order INTEGER, " \
                         "info TEXT, " \
                         "CHECK ((dict_id IS NOT NULL AND virt_id IS NULL) OR (dict_id IS NULL AND virt_id IS NOT NULL AND match_order IS NULL AND info IS NULL))" \
                         ");"
