@@ -34,8 +34,8 @@ import psycopg2
 import pgutil
 
 
-insert_dictionary = "INSERT INTO {}.dictionaries (db_order, name, short_desc, info) " \
-                        "VALUES (%s, %s, %s, %s);"
+insert_dictionary = "INSERT INTO {}.dictionaries (virt_id, db_order, name, short_desc, info) " \
+                        "VALUES (NULL, %s, %s, %s, %s);"
 
 select_dict_id = "SELECT dict_id FROM {}.dictionaries WHERE name = %s;"
 
