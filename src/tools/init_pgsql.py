@@ -41,7 +41,7 @@ create_dictionaries = "CREATE TABLE {}.dictionaries (" \
                         "match_order INTEGER, " \
                         "name VARCHAR(32) UNIQUE NOT NULL, " \
                         "short_desc VARCHAR(128) NOT NULL, " \
-                        "info TEXT NOT NULL" \
+                        "info TEXT" \
                         ");"
 
 create_definitions = "CREATE TABLE {0}.definitions (" \
