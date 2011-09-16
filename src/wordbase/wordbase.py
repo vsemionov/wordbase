@@ -41,7 +41,7 @@ PROGRAM_NAME = "wordbase"
 PROGRAM_VERSION = "0.1"
 
 
-script_name = os.path.basename(__file__).rsplit('.', 1)[0]
+script_name = os.path.basename(__file__)
 
 logger = None
 

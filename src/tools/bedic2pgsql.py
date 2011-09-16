@@ -46,7 +46,7 @@ prepare_insert_definition = "PREPARE insert_definition(VARCHAR(64), TEXT) AS " \
 
 execute_insert_definition = "EXECUTE insert_definition(%s, %s);"
 
-script_name = os.path.basename(__file__).rsplit('.', 1)[0]
+script_name = os.path.basename(__file__)
 
 
 def usage():

@@ -57,7 +57,7 @@ prepare_insert_virtual_dictionary_items = "PREPARE insert_virtual_dictionary_ite
 
 execute_insert_virtual_dictionary_items = "EXECUTE insert_virtual_dictionary_items(%s);"
 
-script_name = os.path.basename(__file__).rsplit('.', 1)[0]
+script_name = os.path.basename(__file__)
 
 
 def usage():
