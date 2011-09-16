@@ -67,6 +67,7 @@ def usage():
     print("Manages virtual dictionaries in pgsql.", file=sys.stderr)
 
 def add_vdict(cur, schema, name, short_desc, dict_names):
+    #TODO: check existence of dict names
     cur.execute(insert_virtual_dictionary.format(schema), (name, short_desc))
     cur.execute(select_vdict_id.format(schema), (name, ))
     virt_id = cur.fetchone()[0]
