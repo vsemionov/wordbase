@@ -34,7 +34,7 @@ import psycopg2
 import pgutil
 
 
-delete_dictionary = "DELETE FROM {}.dictionaries WHERE name = %s;"
+delete_dictionary = "DELETE FROM {}.dictionaries WHERE name IN %s;"
 
 
 script_name = os.path.basename(__file__)
@@ -45,8 +45,7 @@ def usage():
     print("Removes wordbase dictionaries from pgsql.", file=sys.stderr)
 
 def del_pgsql_task(cur, schema, dict_names):
-    for name in dict_names:
-        cur.execute(delete_dictionary.format(schema), (name, ))
+    cur.execute(delete_dictionary.format(schema), (dict_names, ))
 
 
 options, dict_names = pgutil.get_pgsql_params(None, 1, None, usage)
