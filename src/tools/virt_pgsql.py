@@ -34,45 +34,52 @@ import psycopg2
 import pgutil
 
 
-insert_virtual_dictionary = "INSERT INTO {}.virtual_dictionaries (name, short_desc) " \
-                                "VALUES (%s, %s);"
+insert_dictionary = "INSERT INTO {}.dictionaries (dict_id, db_order, name, short_desc, info) " \
+                                "VALUES (NULL, %s, %s, %s, %s);"
 
-select_vdict_id = "SELECT id FROM {}.virtual_dictionaries WHERE name = %s;"
+select_virt_id = "SELECT virt_id FROM {}.dictionaries WHERE name = %s;"
 
-prepare_insert_virtual_dictionary_items = "PREPARE insert_virtual_dictionary_items(VARCHAR(32)) AS " \
-                                            "INSERT INTO {0}.virtual_dictionary_items (virt_id, dict_id) " \
-                                                "VALUES (%s, (" \
-                                                    "SELECT id FROM {0}.dictionaries WHERE name = $1)" \
-                                                    ");"
+prepare_insert_virtual_dictionary = "PREPARE insert_virtual_dictionary(VARCHAR(32)) AS " \
+                                        "INSERT INTO {0}.virtual_dictionaries (virt_id, dict_id) " \
+                                            "VALUES (%s, (" \
+                                                "SELECT dict_id FROM {0}.dictionaries WHERE name = $1)" \
+                                                ");"
 
-execute_insert_virtual_dictionary_items = "EXECUTE insert_virtual_dictionary_items(%s);"
+execute_insert_virtual_dictionary = "EXECUTE insert_virtual_dictionary(%s);"
 
 script_name = os.path.basename(__file__)
 
 
 def usage():
-    print("Usage: {} [-f conf_file] del virt_name", file=sys.stderr)
+    print("Usage: {} [-f conf_file] virt_name short_desc dict_name [...]", file=sys.stderr)
     print("Adds virtual dictionaries in pgsql.", file=sys.stderr)
 
-def add_vdict(cur, schema, name, short_desc, dict_names):
-    cur.execute(insert_virtual_dictionary.format(schema), (name, short_desc))
-    cur.execute(select_vdict_id.format(schema), (name, ))
+def add_vdict(cur, schema, db_order, virt_name, short_desc, info, dict_names):
+    cur.execute(insert_dictionary.format(schema), (db_order, virt_name, short_desc, info))
+    cur.execute(select_virt_id.format(schema), (virt_name, ))
     virt_id = cur.fetchone()[0]
-    cur.execute(prepare_insert_virtual_dictionary_items.format(schema), (virt_id, ))
+    cur.execute(prepare_insert_virtual_dictionary.format(schema), (virt_id, ))
     for dict_name in dict_names:
-        cur.execute(execute_insert_virtual_dictionary_items, (dict_name, ))
+        cur.execute(execute_insert_virtual_dictionary, (dict_name, ))
 
-args = pgutil.get_pgsql_params(None, -1, usage)
+options, args = pgutil.get_pgsql_params("o:i:", 3, None, usage)
 
-if len(args) < 2:
+if len(args) < 3:
     usage()
     sys.exit(2)
 
-cmd_cased, virt_name, *cmd_args = args
-cmd = cmd_cased.lower()
+db_order = options.get("-o")
+if db_order is not None:
+    db_order = int(db_order)
 
-if len(cmd_args) < 2:
-    usage()
-    sys.exit(2)
-short_desc, *dict_names = cmd_args
-pgutil.process_pgsql_task(add_vdict, virt_name, short_desc, dict_names)
+info_file = options.get("-i")
+
+virt_name, short_desc, *dict_names = args
+
+if info_file is not None:
+    with open(info_file, encoding="utf-8") as f:
+        info = f.read()
+else:
+    info = None
+
+pgutil.process_pgsql_task(add_vdict, db_order, virt_name, short_desc, info, dict_names)

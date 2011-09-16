@@ -36,10 +36,14 @@ import pgutil
 
 create_schema = "CREATE SCHEMA {};"
 
-create_dictionaries = "CREATE TABLE {}.dictionaries (" \
+create_dict_id_seq = "CREATE SEQUENCE {}.dictionaries_dict_id_seq;"
+
+create_virt_id_seq = "CREATE SEQUENCE {}.dictionaries_virt_id_seq;"
+
+create_dictionaries = "CREATE TABLE {0}.dictionaries (" \
                         "id SERIAL PRIMARY KEY, " \
-                        "dict_id SERIAL UNIQUE, " \
-                        "virt_id SERIAL UNIQUE, " \
+                        "dict_id INTEGER UNIQUE DEFAULT nextval('{0}.dictionaries_dict_id_seq'), " \
+                        "virt_id INTEGER UNIQUE DEFAULT nextval('{0}.dictionaries_virt_id_seq'), " \
                         "db_order INTEGER, " \
                         "name VARCHAR(32) UNIQUE NOT NULL CHECK (name ~ '^[^ ''\"\\\\\\\\]+$'), " \
                         "short_desc VARCHAR(128) NOT NULL, " \
@@ -54,11 +58,15 @@ create_definitions = "CREATE TABLE {0}.definitions (" \
                         "definition TEXT NOT NULL" \
                         ");"
 
-create_virtual_dictionaries = "CREATE TABLE {0}.virtual_dictionary_items (" \
+create_virtual_dictionaries = "CREATE TABLE {0}.virtual_dictionaries (" \
                                     "virt_id INTEGER NOT NULL REFERENCES {0}.dictionaries(virt_id) ON DELETE CASCADE, " \
                                     "dict_id INTEGER NOT NULL REFERENCES {0}.dictionaries(dict_id) ON DELETE CASCADE, " \
                                     "PRIMARY KEY (virt_id, dict_id)" \
                                     ");" \
+
+alter_dict_id_seq = "ALTER SEQUENCE {0}.dictionaries_dict_id_seq OWNED BY {0}.dictionaries.dict_id;"
+
+alter_virt_id_seq = "ALTER SEQUENCE {0}.dictionaries_virt_id_seq OWNED BY {0}.dictionaries.virt_id;"
 
 script_name = os.path.basename(__file__)
 
@@ -70,11 +78,15 @@ def usage():
 def init_pgsql_task(cur, schema):
     if schema != "public":
         cur.execute(create_schema.format(schema))
+    cur.execute(create_dict_id_seq.format(schema))
+    cur.execute(create_virt_id_seq.format(schema))
     cur.execute(create_dictionaries.format(schema))
     cur.execute(create_definitions.format(schema))
     cur.execute(create_virtual_dictionaries.format(schema))
+    cur.execute(alter_dict_id_seq.format(schema))
+    cur.execute(alter_virt_id_seq.format(schema))
 
 
-pgutil.get_pgsql_params(None, 0, usage)
+pgutil.get_pgsql_params(None, 0, 0, usage)
 
 pgutil.process_pgsql_task(init_pgsql_task)

@@ -66,9 +66,9 @@ def bedic2pgsql_task(cur, schema, db_order, name, short_desc, info, defs):
     print("{} definitions imported".format(len(defs)))
 
 
-options, (name, short_desc, dict_file) = pgutil.get_pgsql_params("m:i:", 3, usage)
+options, (name, short_desc, dict_file) = pgutil.get_pgsql_params("o:i:", 3, 3, usage)
 
-db_order = options.get("-m")
+db_order = options.get("-o")
 if db_order is not None:
     db_order = int(db_order)
 

@@ -39,14 +39,14 @@ _host = _port = _user = _password = _database = _schema = None
 def get_default_conf_path():
     return "/etc/wordbase.conf"
 
-def get_pgsql_params(fmt, nargs, usage):
+def get_pgsql_params(fmt, minargs, maxargs, usage):
     try:
         opts, args = getopt.getopt(sys.argv[1:], "f:" + (fmt or ""))
     except getopt.GetoptError:
         usage()
         sys.exit(2)
 
-    if nargs >= 0 and len(args) != nargs:
+    if (minargs is not None and len(args) < minargs) or (maxargs is not None and len(args) > maxargs):
         usage()
         sys.exit(2)
 

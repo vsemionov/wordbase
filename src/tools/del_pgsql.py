@@ -49,7 +49,7 @@ def del_pgsql_task(cur, schema, dict_names):
         cur.execute(delete_dictionary.format(schema), (name, ))
 
 
-dict_names = pgutil.get_pgsql_params(None, -1, usage)
+dict_names = pgutil.get_pgsql_params(None, 1, None, usage)
 
 if not len(dict_names):
     usage(2)
