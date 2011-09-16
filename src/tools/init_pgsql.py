@@ -70,22 +70,15 @@ def usage():
     print("Usage: {} [-f conf_file]".format(script_name), file=sys.stderr)
     print("Initializes a wordbase pgsql schema.", file=sys.stderr)
 
-host, port, user, password, database, schema, args = pgutil.get_pgsql_params(None, 0, usage)
+def init_pgsql_task(cur, schema):
+    if schema != "public":
+        cur.execute(create_schema.format(schema))
+    cur.execute(create_dictionaries.format(schema))
+    cur.execute(create_definitions.format(schema))
+    cur.execute(create_virtual_dictionaries.format(schema))
+    cur.execute(create_virtual_dictionary_items.format(schema))
 
-conn = psycopg2.connect(host=host, port=port, user=user, password=password, database=database)
 
-try:
-    conn.autocommit = False
-    cur = conn.cursor()
-    try:
-        if schema != "public":
-            cur.execute(create_schema.format(schema))
-        cur.execute(create_dictionaries.format(schema))
-        cur.execute(create_definitions.format(schema))
-        cur.execute(create_virtual_dictionaries.format(schema))
-        cur.execute(create_virtual_dictionary_items.format(schema))
-    finally:
-        cur.close()
-    conn.commit()
-finally:
-    conn.close()
+pgutil.get_pgsql_params(None, 0, usage)
+
+pgutil.process_pgsql_task(init_pgsql_task)

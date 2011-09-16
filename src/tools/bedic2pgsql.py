@@ -53,7 +53,21 @@ def usage():
     print("Usage: {} [-f conf_file] name short_desc info_file dict_file".format(script_name), file=sys.stderr)
     print("Imports a bedic dictionary into pgsql.", file=sys.stderr)
 
-host, port, user, password, database, schema, (name, short_desc, info_file, dict_file) = pgutil.get_pgsql_params(None, 4, usage)
+def bedic2pgsql_task(cur, schema, name, short_desc, info, defs):
+    cur.execute(insert_dictionary.format(schema), (name, short_desc, info))
+
+    cur.execute(select_dict_id.format(schema), (name, ))
+    dict_id = cur.fetchone()[0]
+
+    cur.execute(prepare_insert_definition.format(schema), (dict_id, ))
+
+    for word, definition in defs:
+        cur.execute(execute_insert_definition, (word, definition))
+
+    print("{} definitions imported".format(len(defs)))
+
+
+name, short_desc, info_file, dict_file = pgutil.get_pgsql_params(None, 4, usage)
 
 wbutil.validate_dict_name(name)
 
@@ -66,25 +80,4 @@ with open(dict_file, "r", encoding="cp1251", newline='\n') as f:
 defs.sort(key=lambda d: d[1])
 defs.sort(key=lambda d: d[0].lower())
 
-conn = psycopg2.connect(host=host, port=port, user=user, password=password, database=database)
-
-try:
-    conn.autocommit = False
-    cur = conn.cursor()
-    try:
-        cur.execute(insert_dictionary.format(schema), (name, short_desc, info))
-
-        cur.execute(select_dict_id.format(schema), (name, ))
-        dict_id = cur.fetchone()[0]
-
-        cur.execute(prepare_insert_definition.format(schema), (dict_id, ))
-
-        for word, definition in defs:
-            cur.execute(execute_insert_definition, (word, definition))
-
-        print("{} definitions imported".format(len(defs)))
-    finally:
-        cur.close()
-    conn.commit()
-finally:
-    conn.close()
+pgutil.process_pgsql_task(bedic2pgsql_task, name, short_desc, info, defs)

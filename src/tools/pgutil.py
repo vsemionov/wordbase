@@ -33,6 +33,9 @@ import configparser
 import psycopg2
 
 
+_host = _port = _user = _password = _database = _schema = None
+
+
 def get_default_conf_path():
     return "/etc/wordbase.conf"
 
@@ -61,11 +64,26 @@ def get_pgsql_params(fmt, nargs, usage):
 
     pgconfig = config["pgsql"]
 
-    host = pgconfig.get("host", "localhost")
-    port = pgconfig.getint("port", 5432)
-    user = pgconfig.get("user", "nobody")
-    password = pgconfig.get("password", "")
-    database = pgconfig.get("database", "wordbase")
-    schema = pgconfig.get("schema", "") or "public"
+    global _host, _port, _user, _password, _database, _schema
+    _host = pgconfig.get("host", "localhost")
+    _port = pgconfig.getint("port", 5432)
+    _user = pgconfig.get("user", "nobody")
+    _password = pgconfig.get("password", "")
+    _database = pgconfig.get("database", "wordbase")
+    _schema = pgconfig.get("schema", "") or "public"
 
-    return host, port, user, password, database, schema, args
+    return args
+
+def process_pgsql_task(task, *args):
+    conn = psycopg2.connect(host=_host, port=_port, user=_user, password=_password, database=_database)
+
+    try:
+        conn.autocommit = False
+        cur = conn.cursor()
+        try:
+            task(cur, _schema, *args)
+        finally:
+            cur.close()
+        conn.commit()
+    finally:
+        conn.close()

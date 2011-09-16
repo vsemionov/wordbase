@@ -78,7 +78,7 @@ def del_vdict(cur, schema, name):
     cur.execute(delete_virtual_dictionary_items.format(schema), (name, ))
     cur.execute(delete_virtual_dictionary.format(schema), (name, ))
 
-host, port, user, password, database, schema, args = pgutil.get_pgsql_params(None, -1, usage)
+args = pgutil.get_pgsql_params(None, -1, usage)
 
 if len(args) < 2:
     usage()
@@ -93,27 +93,12 @@ if cmd == "add":
         sys.exit(2)
     wbutil.validate_dict_name(virt_name)
     short_desc, *dict_names = cmd_args
-    process_func_args = virt_name, short_desc, dict_names
-    process_func = add_vdict
+    pgutil.process_pgsql_task(add_vdict, virt_name, short_desc, dict_names)
 elif cmd == "del":
     if len(cmd_args):
         usage()
         sys.exit(2)
-    process_func_args = virt_name,
-    process_func = del_vdict
+    pgutil.process_pgsql_task(del_vdict, virt_name)
 else:
     usage()
     sys.exit(2)
-
-conn = psycopg2.connect(host=host, port=port, user=user, password=password, database=database)
-
-try:
-    conn.autocommit = False
-    cur = conn.cursor()
-    try:
-        process_func(cur, schema, *process_func_args)
-    finally:
-        cur.close()
-    conn.commit()
-finally:
-    conn.close()
