@@ -67,7 +67,7 @@ def bedic2pgsql_task(cur, schema, match_order, name, short_desc, info, defs):
     print("{} definitions imported".format(len(defs)))
 
 
-options, (name, short_desc, dict_file) = pgutil.get_pgsql_params("m:i:", 4, usage)
+options, (name, short_desc, dict_file) = pgutil.get_pgsql_params("m:i:", 3, usage)
 
 match_order = options.get("-m")
 if match_order is not None:
