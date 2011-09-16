@@ -42,7 +42,7 @@ script_name = os.path.basename(__file__)
 
 def usage():
     print("Usage: {} [-f conf_file] dict [...]".format(script_name), file=sys.stderr)
-    print("Removed wordbase pgsql dictionary.", file=sys.stderr)
+    print("Removes wordbase dictionaries from pgsql.", file=sys.stderr)
 
 def del_pgsql_task(cur, schema, dict_names):
     for name in dict_names:
