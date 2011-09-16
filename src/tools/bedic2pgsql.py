@@ -31,7 +31,6 @@ import os
 
 import psycopg2
 
-import wbutil
 import pgutil
 
 
@@ -74,8 +73,6 @@ if match_order is not None:
     match_order = int(match_order)
 
 info_file = options.get("-i")
-
-wbutil.validate_dict_name(name)
 
 if info_file is not None:
     with open(info_file, encoding="utf-8") as f:

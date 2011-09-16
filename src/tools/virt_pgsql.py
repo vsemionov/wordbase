@@ -31,7 +31,6 @@ import os
 
 import psycopg2
 
-import wbutil
 import pgutil
 
 
@@ -92,7 +91,6 @@ if cmd == "add":
     if len(cmd_args) < 2:
         usage()
         sys.exit(2)
-    wbutil.validate_dict_name(virt_name)
     short_desc, *dict_names = cmd_args
     pgutil.process_pgsql_task(add_vdict, virt_name, short_desc, dict_names)
 elif cmd == "del":
