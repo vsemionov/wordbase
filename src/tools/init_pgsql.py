@@ -38,6 +38,7 @@ create_schema = "CREATE SCHEMA {};"
 
 create_dictionaries_base = "CREATE TABLE {}.dictionaries_base (" \
                             "id SERIAL PRIMARY KEY, " \
+                            "name VARCHAR(32) UNIQUE NOT NULL CHECK (name ~ '^[^ ''\"\\\\\\\\]$'), " \
                             "short_desc VARCHAR(128) NOT NULL" \
                             ");"
 
@@ -52,7 +53,7 @@ create_virtual_dictionaries = "CREATE TABLE {0}.virtual_dictionaries (" \
                                 ") INHERITS ({0}.dictionaries_base);" \
 
 create_dictionary_names = "CREATE TABLE {0}.dictionary_names (" \
-                            "name VARCHAR(32) PRIMARY KEY CHECK (' ''\"\\' !~ name), " \
+                            "name VARCHAR(32) PRIMARY KEY CHECK (name ~ '^[^ ''\"\\\\\\\\]$'), " \
                             "dict_id INTEGER UNIQUE REFERENCES {0}.dictionaries, " \
                             "virt_id INTEGER UNIQUE REFERENCES {0}.virtual_dictionaries, " \
                             "CHECK ((dict_id IS NOT NULL AND virt_id IS NULL) OR (dict_id IS NULL AND virt_id IS NOT NULL))" \
