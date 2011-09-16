@@ -63,7 +63,7 @@ create_virtual_dictionary_items = "CREATE TABLE {0}.virtual_dictionary_items (" 
                                     "PRIMARY KEY (virt_id, dict_id)" \
                                     ");" \
 
-script_name = os.path.basename(__file__)
+script_name = os.path.basename(__file__).rsplit('.', 1)[0]
 
 
 def usage():
