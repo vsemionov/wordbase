@@ -36,38 +36,27 @@ import pgutil
 
 create_schema = "CREATE SCHEMA {};"
 
-create_dictionaries_base = "CREATE TABLE {}.dictionaries_base (" \
-                            "id SERIAL PRIMARY KEY, " \
-                            "short_desc VARCHAR(128) NOT NULL" \
-                            ");"
-
-create_dictionaries = "CREATE TABLE {0}.dictionaries (" \
+create_dictionaries = "CREATE TABLE {}.dictionaries (" \
                         "id SERIAL PRIMARY KEY, " \
+                        "dict_id SERIAL UNIQUE, " \
+                        "virt_id SERIAL UNIQUE, " \
+                        "name VARCHAR(32) UNIQUE NOT NULL CHECK (name ~ '^[^ ''\"\\\\\\\\]+$'), " \
                         "match_order INTEGER, " \
-                        "info TEXT" \
-                        ") INHERITS ({0}.dictionaries_base);"
-
-create_virtual_dictionaries = "CREATE TABLE {0}.virtual_dictionaries (" \
-                                "id SERIAL PRIMARY KEY" \
-                                ") INHERITS ({0}.dictionaries_base);" \
-
-create_dictionary_names = "CREATE TABLE {0}.dictionary_names (" \
-                            "name VARCHAR(32) PRIMARY KEY CHECK (name ~ '^[^ ''\"\\\\\\\\]+$'), " \
-                            "dict_id INTEGER UNIQUE REFERENCES {0}.dictionaries, " \
-                            "virt_id INTEGER UNIQUE REFERENCES {0}.virtual_dictionaries, " \
-                            "CHECK ((dict_id IS NOT NULL AND virt_id IS NULL) OR (dict_id IS NULL AND virt_id IS NOT NULL))" \
-                            ");"
+                        "short_desc VARCHAR(128), " \
+                        "info TEXT, " \
+                        "CHECK ((dict_id IS NOT NULL AND virt_id IS NULL) OR (dict_id IS NULL AND virt_id IS NOT NULL AND match_order IS NULL AND info IS NULL))" \
+                        ");"
 
 create_definitions = "CREATE TABLE {0}.definitions (" \
                         "id SERIAL PRIMARY KEY, " \
-                        "dict_id INTEGER NOT NULL REFERENCES {0}.dictionaries, " \
+                        "dict_id INTEGER NOT NULL REFERENCES {0}.dictionaries(dict_id), " \
                         "word VARCHAR(64) NOT NULL, " \
                         "definition TEXT NOT NULL" \
                         ");"
 
-create_virtual_dictionary_items = "CREATE TABLE {0}.virtual_dictionary_items (" \
-                                    "virt_id INTEGER NOT NULL REFERENCES {0}.virtual_dictionaries, " \
-                                    "dict_id INTEGER NOT NULL REFERENCES {0}.dictionaries, " \
+create_virtual_dictionaries = "CREATE TABLE {0}.virtual_dictionary_items (" \
+                                    "virt_id INTEGER NOT NULL REFERENCES {0}.dictionaries(virt_id), " \
+                                    "dict_id INTEGER NOT NULL REFERENCES {0}.dictionaries(dict_id), " \
                                     "PRIMARY KEY (virt_id, dict_id)" \
                                     ");" \
 
@@ -81,11 +70,9 @@ def usage():
 def init_pgsql_task(cur, schema):
     if schema != "public":
         cur.execute(create_schema.format(schema))
-    cur.execute(create_dictionaries_base.format(schema))
     cur.execute(create_dictionaries.format(schema))
-    cur.execute(create_virtual_dictionaries.format(schema))
     cur.execute(create_definitions.format(schema))
-    cur.execute(create_virtual_dictionary_items.format(schema))
+    cur.execute(create_virtual_dictionaries.format(schema))
 
 
 pgutil.get_pgsql_params(None, 0, usage)
