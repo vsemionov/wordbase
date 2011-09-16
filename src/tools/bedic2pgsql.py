@@ -36,13 +36,13 @@ import pgutil
 
 
 insert_dictionary = "INSERT INTO {}.dictionaries (match_order, name, short_desc, info) " \
-                    "VALUES (%s, %s, %s, %s);"
+                        "VALUES (%s, %s, %s, %s);"
 
 select_dict_id = "SELECT id FROM {}.dictionaries WHERE name = %s;"
 
 prepare_insert_definition = "PREPARE insert_definition(VARCHAR(64), TEXT) AS " \
                                 "INSERT INTO {}.definitions (dict_id, word, definition) " \
-                                "VALUES (%s, $1, $2);"
+                                    "VALUES (%s, $1, $2);"
 
 execute_insert_definition = "EXECUTE insert_definition(%s, %s);"
 

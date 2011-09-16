@@ -38,22 +38,22 @@ import pgutil
 delete_virtual_dictionary_items = "DELETE FROM {0}.virtual_dictionary_items " \
                                     "WHERE virt_id = (" \
                                         "SELECT id FROM {0}.virtual_dictionaries " \
-                                        "WHERE name = %s" \
+                                            "WHERE name = %s" \
                                         ");"
 
 delete_virtual_dictionary = "DELETE FROM {}.virtual_dictionaries " \
                                 "WHERE name = %s;"
 
 insert_virtual_dictionary = "INSERT INTO {}.virtual_dictionaries (name, short_desc) " \
-                            "VALUES (%s, %s);"
+                                "VALUES (%s, %s);"
 
 select_vdict_id = "SELECT id FROM {}.virtual_dictionaries WHERE name = %s;"
 
 prepare_insert_virtual_dictionary_items = "PREPARE insert_virtual_dictionary_items(VARCHAR(32)) AS " \
                                             "INSERT INTO {0}.virtual_dictionary_items (virt_id, dict_id) " \
-                                            "VALUES (%s, (" \
-                                                "SELECT id FROM {0}.dictionaries WHERE name = $1)" \
-                                                ");"
+                                                "VALUES (%s, (" \
+                                                    "SELECT id FROM {0}.dictionaries WHERE name = $1)" \
+                                                    ");"
 
 execute_insert_virtual_dictionary_items = "EXECUTE insert_virtual_dictionary_items(%s);"
 
