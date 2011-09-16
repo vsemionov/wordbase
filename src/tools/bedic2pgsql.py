@@ -34,10 +34,10 @@ import psycopg2
 import pgutil
 
 
-insert_dictionary = "INSERT INTO {}.dictionaries (match_order, name, short_desc, info) " \
+insert_dictionary = "INSERT INTO {}.dictionaries (db_order, name, short_desc, info) " \
                         "VALUES (%s, %s, %s, %s);"
 
-select_dict_id = "SELECT id FROM {}.dictionaries WHERE name = %s;"
+select_dict_id = "SELECT dict_id FROM {}.dictionaries WHERE name = %s;"
 
 prepare_insert_definition = "PREPARE insert_definition(VARCHAR(64), TEXT) AS " \
                                 "INSERT INTO {}.definitions (dict_id, word, definition) " \
@@ -49,11 +49,11 @@ script_name = os.path.basename(__file__)
 
 
 def usage():
-    print("Usage: {} [-f conf_file] [-m match_order] [-i info_file] name short_desc dict_file".format(script_name), file=sys.stderr)
+    print("Usage: {} [-f conf_file] [-o db_order] [-i info_file] name short_desc dict_file".format(script_name), file=sys.stderr)
     print("Imports a bedic dictionary into pgsql.", file=sys.stderr)
 
-def bedic2pgsql_task(cur, schema, match_order, name, short_desc, info, defs):
-    cur.execute(insert_dictionary.format(schema), (match_order, name, short_desc, info))
+def bedic2pgsql_task(cur, schema, db_order, name, short_desc, info, defs):
+    cur.execute(insert_dictionary.format(schema), (db_order, name, short_desc, info))
 
     cur.execute(select_dict_id.format(schema), (name, ))
     dict_id = cur.fetchone()[0]
@@ -68,9 +68,9 @@ def bedic2pgsql_task(cur, schema, match_order, name, short_desc, info, defs):
 
 options, (name, short_desc, dict_file) = pgutil.get_pgsql_params("m:i:", 3, usage)
 
-match_order = options.get("-m")
-if match_order is not None:
-    match_order = int(match_order)
+db_order = options.get("-m")
+if db_order is not None:
+    db_order = int(db_order)
 
 info_file = options.get("-i")
 
@@ -86,4 +86,4 @@ with open(dict_file, "r", encoding="cp1251", newline='\n') as f:
 defs.sort(key=lambda d: d[1])
 defs.sort(key=lambda d: d[0].lower())
 
-pgutil.process_pgsql_task(bedic2pgsql_task, match_order, name, short_desc, info, defs)
+pgutil.process_pgsql_task(bedic2pgsql_task, db_order, name, short_desc, info, defs)
