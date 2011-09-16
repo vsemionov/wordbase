@@ -75,7 +75,7 @@ def get_pgsql_params(fmt, nargs, usage):
     _database = pgconfig.get("database", "wordbase")
     _schema = pgconfig.get("schema", "") or "public"
 
-    return options, args if fmt else args
+    return (options, args) if fmt else args
 
 def process_pgsql_task(task, *args):
     conn = psycopg2.connect(host=_host, port=_port, user=_user, password=_password, database=_database)
