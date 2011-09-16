@@ -49,14 +49,14 @@ create_dictionaries = "CREATE TABLE {}.dictionaries (" \
 
 create_definitions = "CREATE TABLE {0}.definitions (" \
                         "id SERIAL PRIMARY KEY, " \
-                        "dict_id INTEGER NOT NULL REFERENCES {0}.dictionaries(dict_id), " \
+                        "dict_id INTEGER NOT NULL REFERENCES {0}.dictionaries(dict_id) ON DELETE CASCADE, " \
                         "word VARCHAR(64) NOT NULL, " \
                         "definition TEXT NOT NULL" \
                         ");"
 
 create_virtual_dictionaries = "CREATE TABLE {0}.virtual_dictionary_items (" \
-                                    "virt_id INTEGER NOT NULL REFERENCES {0}.dictionaries(virt_id), " \
-                                    "dict_id INTEGER NOT NULL REFERENCES {0}.dictionaries(dict_id), " \
+                                    "virt_id INTEGER NOT NULL REFERENCES {0}.dictionaries(virt_id) ON DELETE CASCADE, " \
+                                    "dict_id INTEGER NOT NULL REFERENCES {0}.dictionaries(dict_id) ON DELETE CASCADE, " \
                                     "PRIMARY KEY (virt_id, dict_id)" \
                                     ");" \
 
