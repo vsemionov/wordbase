@@ -44,12 +44,6 @@ delete_virtual_dictionary_items = "DELETE FROM {0}.virtual_dictionary_items " \
 delete_virtual_dictionary = "DELETE FROM {}.virtual_dictionaries " \
                                 "WHERE name = %s;"
 
-check_names = "SELECT (" \
-                "SELECT count(*) FROM {0}.dictionaries " \
-                    "WHERE name IN %s" \
-                    ")" \
-                " = %s;"
-
 insert_virtual_dictionary = "INSERT INTO {}.virtual_dictionaries (name, short_desc) " \
                                 "VALUES (%s, %s);"
 
@@ -72,15 +66,7 @@ def usage():
     print("    {} [-f conf_file] del virt_name".format(script_name), file=sys.stderr)
     print("Manages virtual dictionaries in pgsql.", file=sys.stderr)
 
-def do_check_names(cur, schema, dict_names):
-    cur.execute(check_names.format(schema), (tuple(dict_names), len(dict_names)))
-    found = cur.fetchone()[0]
-    if not found:
-        print("non-existent dictionary", file=sys.stderr)
-        sys.exit(2)
-
 def add_vdict(cur, schema, name, short_desc, dict_names):
-    do_check_names(cur, schema, dict_names)
     cur.execute(insert_virtual_dictionary.format(schema), (name, short_desc))
     cur.execute(select_vdict_id.format(schema), (name, ))
     virt_id = cur.fetchone()[0]
