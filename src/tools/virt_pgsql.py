@@ -64,10 +64,6 @@ def add_vdict(cur, schema, db_order, virt_name, short_desc, info, dict_names):
 
 options, args = pgutil.get_pgsql_params("o:i:", 3, None, usage)
 
-if len(args) < 3:
-    usage()
-    sys.exit(2)
-
 db_order = options.get("-o")
 if db_order is not None:
     db_order = int(db_order)
