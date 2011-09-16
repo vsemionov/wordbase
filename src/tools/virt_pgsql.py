@@ -70,7 +70,6 @@ def add_vdict(cur, schema, name, short_desc, dict_names):
     cur.execute(select_vdict_id.format(schema), (name, ))
     virt_id = cur.fetchone()[0]
     cur.execute(prepare_insert_virtual_dictionary_items.format(schema), (virt_id, ))
-    #TODO: to this in a single insert
     for dict_name in dict_names:
         cur.execute(execute_insert_virtual_dictionary_items, (dict_name, ))
 
