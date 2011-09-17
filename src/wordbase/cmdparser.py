@@ -26,9 +26,10 @@
 
 import logging
 
-from pyparsing import ParseException, ParserElement, Empty, White, Suppress, CharsNotIn, Combine, ZeroOrMore, OneOrMore, Optional, StringStart, StringEnd
+from pyparsing import ParseException, ParserElement, Empty, White, Suppress, CharsNotIn, Combine, ZeroOrMore, OneOrMore, Optional, StringStart, StringEnd, Word, nums
 
 import modules
+import debug
 
 
 logger = logging.getLogger(__name__)
@@ -93,15 +94,23 @@ def _get_cmd_action(cmd):
 _start = StringStart()
 _end = StringEnd()
 
-def _command_string(body):
-    return _start + body + _end
-
 def _command(name, real=None):
     cmd = _keyword(name) if name else Empty()
     return cmd.addParseAction(_get_cmd_action(real or name))
 
 def _shortcut(s):
     return Empty().addParseAction(lambda t: s)
+
+def _reset_cmd_action(t):
+    global _cmd_found
+    _cmd_found = None
+
+_reset_command = Empty().setParseAction(_reset_cmd_action)
+
+def _command_string(body):
+    if debug.enabled:
+        body |= _command("T") + Word(nums).setParseAction(lambda t: int(t[0])) + _reset_command + body
+    return _start + body + _end
 
 
 _show_db = _keyword("DB") | _keyword("DATABASES")

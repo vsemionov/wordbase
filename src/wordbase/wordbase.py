@@ -35,6 +35,7 @@ import random
 
 import log
 import daemon
+import debug
 
 
 PROGRAM_NAME = "wordbase"
@@ -44,8 +45,6 @@ PROGRAM_VERSION = "0.1"
 script_name = os.path.basename(__file__)
 
 logger = None
-
-debug_mode = False
 
 version_info = \
 """{name} {version}
@@ -201,8 +200,7 @@ def main():
         elif opt == "-d":
             daemon = arg
         elif opt == "-D":
-            global debug_mode
-            debug_mode = True
+            debug.enabled = True
         else:
             assert False, "unhandled option"
 
@@ -231,7 +229,7 @@ except Exception as ex:
     if logger:
         logger.critical(log_msg, exc_info=sys.exc_info())
         print(err_msg, file=sys.stderr)
-    elif debug_mode:
+    elif debug.enabled:
         logging.critical(log_msg, exc_info=sys.exc_info())
     else:
         print(err_msg, file=sys.stderr)

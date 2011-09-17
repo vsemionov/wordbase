@@ -96,6 +96,9 @@ def _handle_match(sio, command):
 def _handle_define(sio, command):
     _not_implemented(sio, command)
 
+def _handle_time_command(sio, command):
+    _not_implemented(sio, command)
+
 _cmd_handlers = {
                  "": _null_handler,
                  "DEFINE": _handle_define,
@@ -109,6 +112,7 @@ _cmd_handlers = {
                  "AUTH": _not_implemented,
                  "SASLAUTH": _not_implemented,
                  "SASLRESP": _not_implemented,
+                 "T": _handle_time_command
                 }
 
 
