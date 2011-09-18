@@ -26,7 +26,7 @@
 
 import logging
 
-from pyparsing import ParseException, ParserElement, Empty, White, Suppress, CharsNotIn, Combine, ZeroOrMore, OneOrMore, Optional, Word, nums, StringStart, StringEnd
+from pyparsing import ParserElement, Empty, Word, CharsNotIn, White, Optional, ZeroOrMore, OneOrMore, StringStart, StringEnd, Combine, Group, Suppress, nums, ParseException 
 
 import modules
 import debug
@@ -77,11 +77,12 @@ _decimal = Word(nums).setParseAction(lambda t: int(t[0]))
 
 _cmd_state = None
 
-def _reset_cmd_state_action(t):
-    global _cmd_state
-    _cmd_state = None
-
-_reset_cmd_state = Empty().setParseAction(_reset_cmd_state_action)
+def _get_reset_cmd_state_action(cmd):
+    def _reset_cmd_state_action(t):
+        global _cmd_state
+        if cmd is None or (_cmd_state is not None and _cmd_state == cmd):
+            _cmd_state = None
+    return Empty().setParseAction(_reset_cmd_state_action)
 
 def _get_keyword_action(kw):
     def _keyword_action(s, l, t):
@@ -96,7 +97,8 @@ def _keyword(kw):
 def _get_cmd_action(cmd):
     def _cmd_action(t):
         global _cmd_state
-        _cmd_state = cmd
+        if _cmd_state is None:
+            _cmd_state = cmd
         return cmd
     return _cmd_action
 
@@ -113,7 +115,7 @@ def _bound_command(body):
 def _command_string(body):
     cmd_str = _bound_command(body)
     if debug.enabled:
-        cmd_str |= _bound_command(_command("T") + _decimal + body)
+        cmd_str |= _bound_command(_command("T") + _decimal + _get_reset_cmd_state_action("T") + Group(body))
     return cmd_str
 
 def _shortcut(s):
@@ -127,7 +129,7 @@ _show_server = _keyword("SERVER")
 
 _show_params = _show_db | _show_strat | _show_info | _show_server
 
-_grammar = _command_string(_command("") + _reset_cmd_state)
+_grammar = _command_string(_command("") + _get_reset_cmd_state_action(None))
 _grammar |= _command_string(_command("DEFINE") + _word + _word) | _command_string(_command("D", "DEFINE") + _shortcut("*") + _word) | _command_string(_command("D", "DEFINE") + _word + _word)
 _grammar |= _command_string(_command("MATCH") + _word + _word + _word) | _command_string(_command("M", "MATCH") + _shortcut("*") + _shortcut(".") + _word) | _command_string(_command("M", "MATCH") + _shortcut("*") + _word + _word) | _command_string(_command("M", "MATCH") + _word + _word + _word)
 _grammar |= _command_string(_command("SHOW") + _show_params)
