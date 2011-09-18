@@ -30,11 +30,12 @@ import traceback
 enabled = False
 
 
-class NullConnection:
-    def _not_impl(self, name):
-        method = name or traceback.extract_stack()[-2][2]
-        raise NotImplementedError("{}.{} not implemented".format(self.__class__.__name__, method))
+def not_impl(self, name=None):
+    method = name or traceback.extract_stack()[-2][2]
+    raise NotImplementedError("{}.{} not implemented".format(self.__class__.__name__, method))
 
+
+class NullConnection:
     def write_line(self, line, split=True):
         pass
 
@@ -48,4 +49,4 @@ class NullConnection:
         pass
 
     def __getattr__(self, name):
-        self._not_impl(name)
+        not_impl(self, name)

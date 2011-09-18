@@ -24,21 +24,18 @@
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 
+import debug
+
+
 class BackendError(IOError):
     pass
 
 class BackendBase:
-    def connect(self):
-        raise NotImplementedError("not implemented")
-
     def close(self):
-        raise NotImplementedError("not implemented")
+        debug.not_impl(self)
 
     def __enter__(self):
-        return self.connect()
+        return self
 
     def __exit__(self, *args):
-        self.close()
-
-    def __del__(self):
         self.close()
