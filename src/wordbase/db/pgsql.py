@@ -46,20 +46,25 @@ def configure(config):
     logger.debug("initialized")
 
 
+def pg_exc(func):
+    def wrap_pg_exc(*args):
+        try:
+            func(*args)
+        except (psycopg2.Error, psycopg2.Warning) as ex:
+            raise db.BackendError(ex)
+    return wrap_pg_exc
+
 class Backend(db.BackendBase):
     def __init__(self):
         self._conn = None
 
+    @pg_exc
     def connect(self):
         self.close()
-
-        try:
-            self._conn = psycopg2.connect(host=_host, port=_port, user=_user, password=_password, database=_database)
-        except (psycopg2.Error, psycopg2.Warning) as ex:
-            raise db.BackendError(ex)
-
+        self._conn = psycopg2.connect(host=_host, port=_port, user=_user, password=_password, database=_database)
         self._conn.autocommit = True
 
+    @pg_exc
     def close(self):
         if self._conn is not None:
             self._conn.close()
