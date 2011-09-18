@@ -94,7 +94,7 @@ def _keyword(kw):
     return _word.copy().setParseAction(_get_keyword_action(kw))
 
 def _get_cmd_action(cmd):
-    def _cmd_action(s, l, t):
+    def _cmd_action(t):
         global _cmd_found
         _cmd_found = cmd
         return cmd
