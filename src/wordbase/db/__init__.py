@@ -31,10 +31,14 @@ class BackendError(IOError):
     pass
 
 class BackendBase:
+    def connect(self):
+        debug.not_impl(self)
+
     def close(self):
         debug.not_impl(self)
 
     def __enter__(self):
+        self.connect()
         return self
 
     def __exit__(self, *args):

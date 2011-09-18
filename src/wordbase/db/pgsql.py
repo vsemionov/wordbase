@@ -47,8 +47,17 @@ def configure(config):
 
 
 class Backend(db.BackendBase):
+    def __init__(self):
+        self._conn = None
+
     def connect(self):
-        self._conn = psycopg2.connect(host=_host, port=_port, user=_user, password=_password, database=_database)
+        self.close()
+
+        try:
+            self._conn = psycopg2.connect(host=_host, port=_port, user=_user, password=_password, database=_database)
+        except (psycopg2.Error, psycopg2.Warning) as ex:
+            raise db.BackendError(ex)
+
         self._conn.autocommit = True
 
     def close(self):
