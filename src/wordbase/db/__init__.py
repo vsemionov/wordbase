@@ -27,6 +27,9 @@
 import debug
 
 
+class InvalidDictionaryError(ValueError):
+    pass
+
 class BackendError(IOError):
     pass
 

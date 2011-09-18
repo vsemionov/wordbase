@@ -46,6 +46,9 @@ def configure(config):
     logger.debug("initialized")
 
 
+def _statement(stmt):
+    return stmt.format(_schema)
+
 def pg_exc(func):
     def wrap_pg_exc(*args):
         try:
@@ -63,9 +66,78 @@ class Backend(db.BackendBase):
         self.close()
         self._conn = psycopg2.connect(host=_host, port=_port, user=_user, password=_password, database=_database)
         self._conn.autocommit = True
+        self._cur = self._conn.cursor()
+        logger.debug("connected to pgsql")
 
     @pg_exc
     def close(self):
+        if self._cur is not None:
+            self._cur.close()
+            self._cur = None
         if self._conn is not None:
             self._conn.close()
             self._conn = None
+            logger.debug("closed the pgsql connection")
+
+    @pg_exc
+    def get_dictionaries(self):
+        cur = self._cur
+        stmt = "SELECT name, short_desc FROM {}.dictionaries ORDER BY (virt_id IS NULL) DESC, db_order;".format(_schema)
+        cur.execute(stmt)
+        rs = cur.fetchall()
+        return rs
+
+    @pg_exc
+    def get_real_dictionary_names(self):
+        cur = self._cur
+        stmt = "SELECT name FROM {}.dictionaries WHERE virt_id IS NULL ORDER BY db_order;".format(_schema)
+        cur.execute(stmt)
+        rs = cur.fetchall()
+        return list(zip(*rs))[0]
+
+    @staticmethod
+    def _invalid_dict(dictionary):
+        raise db.InvalidDictionaryError("invalid dictionary: {}".format(dictionary))
+
+    @pg_exc
+    def get_dictionary_info(self, dictionary):
+        cur = self._cur
+        stmt = "SELECT name, (virt_id IS NOT NULL) AS virtual, info FROM {}.dictionaries WHERE name = %s AND (dict_id IS NOT NULL OR virt_id IS NOT NULL);".format(_schema)
+        cur.execute(stmt, (dictionary,))
+        if cur.rowcount < 1:
+            self.__class__._invalid_dict(dictionary)
+        row = cur.fetchone()
+        return row
+
+    def _get_words_real(self, dict_id):
+        cur = self._cur
+        stmt = "SELECT DISTINCT word FROM {}.definitions WHERE dict_id = %s;".format(_schema)
+        cur.execute(stmt, (dict_id,))
+        rs = cur.fetchall()
+        return list(zip(*rs))[0]
+
+    def _get_virt_dict(self, virt_id):
+        cur = self._cur
+        stmt = "SELECT {0}.virtual_dictionaries.dict_id, {0}.dictionaries.name FROM {0}.virtual_dictionaries INNER JOIN {0}.dictionaries USING dict_id WHERE {0}.virtual_dictionaries.virt_id = %s ORDER BY {0}.dictionaries.db_order;".format(_schema)
+        cur.execute(stmt, (virt_id,))
+        rs = cur.fetchall()
+        return list(zip(*rs))[0]
+
+    @pg_exc
+    def get_words(self, dictionary):
+        cur = self._cur
+        stmt = "SELECT dict_id, virt_id FROM {}.dictionaries WHERE name = %s;".format(_schema)
+        cur.execute(stmt, (dictionary,))
+        if cur.rowcount >= 1:
+            dict_id, virt_id = cur.fetchone()
+            if dict_id is not None:
+                words = self._get_words_real(dict_id)
+                res = [(dictionary, words)]
+                return res
+            elif virt_id is not None:
+                res = []
+                for dict_id, dict_name in self._get_virt_dict(virt_id):
+                    words = self._get_words_real(dict_id)
+                    res += (dict_name, words)
+                return res
+        self.__class__._invalid_dict(dictionary)
