@@ -113,9 +113,10 @@ _cmd_handlers = {
 
 
 def _send_banner(sio):
+    fqdn = socket.getfqdn()
     local = "{}.{}".format(random.randint(0, 9999), random.randint(0, 9999))
     msg_id = "<{}@{}>".format(local, _domain)
-    net.write_status(sio, 220, "{} {} {}".format(socket.getfqdn(), _server_string, msg_id))
+    net.write_status(sio, 220, "{} {} {}".format(fqdn, _server_string, msg_id))
 
 def _handle_syntax_error(sio, command):
     if command is None:
