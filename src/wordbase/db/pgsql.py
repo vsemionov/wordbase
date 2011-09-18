@@ -26,19 +26,32 @@
 
 import logging
 
+import psycopg2
+
 import db
 
 
 logger = logging.getLogger(__name__)
 
 
+def configure(config):
+    global _host, _port, _user, _password, _database, _schema
+    _host = config.get("host", "localhost")
+    _port = config.getint("port", 5432)
+    _user = config.get("user", "nobody")
+    _password = config.get("password", "")
+    _database = config.get("database", "wordbase")
+    _schema = config.get("schema", "") or "public"
+
+    logger.debug("initialized")
+
+
 class Backend(db.BackendBase):
     def connect(self):
-        pass
+        self._conn = psycopg2.connect(host=_host, port=_port, user=_user, password=_password, database=_database)
+        self._conn.autocommit = True
 
     def close(self):
-        pass
-
-
-def configure(config):
-    logger.debug("initialized")
+        if self._conn is not None:
+            self._conn.close()
+            self._conn = None
