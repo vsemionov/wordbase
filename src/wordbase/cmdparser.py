@@ -26,7 +26,7 @@
 
 import logging
 
-from pyparsing import ParseException, ParserElement, Empty, White, Suppress, CharsNotIn, Combine, ZeroOrMore, OneOrMore, Optional, StringStart, StringEnd, Word, nums
+from pyparsing import ParseException, ParserElement, Empty, White, Suppress, CharsNotIn, Combine, ZeroOrMore, OneOrMore, Optional, Word, nums, StringStart, StringEnd
 
 import modules
 import debug
@@ -73,7 +73,15 @@ _text = Combine(OneOrMore(_word.copy().setParseAction(_word_action) | _ws.copy()
 _description = _text.copy()
 
 
+_decimal = Word(nums).setParseAction(lambda t: int(t[0]))
+
 _cmd_found = None
+
+def _reset_cmd_action(t):
+    global _cmd_found
+    _cmd_found = None
+
+_reset_command = Empty().setParseAction(_reset_cmd_action)
 
 def _get_keyword_action(kw):
     def _keyword_action(s, l, t):
@@ -92,27 +100,24 @@ def _get_cmd_action(cmd):
         return cmd
     return _cmd_action
 
-_start = StringStart()
-_end = StringEnd()
-
 def _command(name, real=None):
     cmd = _keyword(name) if name else Empty()
     return cmd.addParseAction(_get_cmd_action(real or name))
 
-def _shortcut(s):
-    return Empty().addParseAction(lambda t: s)
+_start = StringStart()
+_end = StringEnd()
 
-def _reset_cmd_action(t):
-    global _cmd_found
-    _cmd_found = None
-
-_reset_command = Empty().setParseAction(_reset_cmd_action)
+def _bound_command(body):
+    return _start + body + _end
 
 def _command_string(body):
-    cmd_str = _start + body + _end
+    cmd_str = _bound_command(body)
     if debug.enabled:
-        cmd_str |= _start + _command("T") + Word(nums).setParseAction(lambda t: int(t[0])) + _reset_command + body + _end
+        cmd_str |= _bound_command(_command("T") + _decimal + _reset_command + body)
     return cmd_str
+
+def _shortcut(s):
+    return Empty().addParseAction(lambda t: s)
 
 
 _show_db = _keyword("DB") | _keyword("DATABASES")
