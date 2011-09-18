@@ -89,6 +89,7 @@ def _get_cmd_action(cmd):
     def _cmd_action(s, l, t):
         global _cmd_found
         _cmd_found = cmd
+        return cmd
     return _cmd_action
 
 _start = StringStart()
@@ -120,7 +121,7 @@ _show_server = _keyword("SERVER")
 
 _show_params = _show_db | _show_strat | _show_info | _show_server
 
-_grammar = _command_string(_command(""))
+_grammar = _command_string(_command("") + _reset_command)
 _grammar |= _command_string(_command("DEFINE") + _word + _word) | _command_string(_command("D", "DEFINE") + _shortcut("*") + _word) | _command_string(_command("D", "DEFINE") + _word + _word)
 _grammar |= _command_string(_command("MATCH") + _word + _word + _word) | _command_string(_command("M", "MATCH") + _shortcut("*") + _shortcut(".") + _word) | _command_string(_command("M", "MATCH") + _shortcut("*") + _word + _word) | _command_string(_command("M", "MATCH") + _word + _word + _word)
 _grammar |= _command_string(_command("SHOW") + _show_params)
