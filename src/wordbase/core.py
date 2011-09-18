@@ -108,10 +108,6 @@ _cmd_handlers = {
                  "STATUS": _handle_status,
                  "HELP": _handle_help,
                  "QUIT": _handle_quit,
-                 "OPTION": _not_implemented,
-                 "AUTH": _not_implemented,
-                 "SASLAUTH": _not_implemented,
-                 "SASLRESP": _not_implemented,
                  "T": _handle_time_command
                 }
 
@@ -130,7 +126,7 @@ def _handle_syntax_error(sio, command):
 
 def _handle_command(sio, command):
     name = command[0]
-    handler = _cmd_handlers[name]
+    handler = _cmd_handlers.get(name, _not_implemented)
     return handler(sio, command)
 
 def _session(sock):

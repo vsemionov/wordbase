@@ -125,7 +125,7 @@ def _shortcut(s):
 _show_db = _keyword("DB") | _keyword("DATABASES")
 _show_strat = _keyword("STRAT") | _keyword("STRATEGIES")
 _show_info = _keyword("INFO") + _word
-_show_server = _keyword("SERVER")
+_show_server = _keyword("SERVER") + Optional(_text)
 
 _show_params = _show_db | _show_strat | _show_info | _show_server
 
@@ -134,10 +134,10 @@ _grammar |= _command_string(_command("DEFINE") + _word + _word) | _command_strin
 _grammar |= _command_string(_command("MATCH") + _word + _word + _word) | _command_string(_command("M", "MATCH") + _shortcut("*") + _shortcut(".") + _word) | _command_string(_command("M", "MATCH") + _shortcut("*") + _word + _word) | _command_string(_command("M", "MATCH") + _word + _word + _word)
 _grammar |= _command_string(_command("SHOW") + _show_params)
 _grammar |= _command_string(_command("CLIENT") + Optional(_text, default=""))
-_grammar |= _command_string(_command("STATUS")) | _command_string(_command("S", "STATUS"))
-_grammar |= _command_string(_command("HELP")) | _command_string(_command("H", "HELP"))
-_grammar |= _command_string(_command("QUIT")) | _command_string(_command("Q", "QUIT"))
-_grammar |= _command_string(_command("OPTION") + _keyword("MIME"))
+_grammar |= _command_string(_command("STATUS") + Optional(_text)) | _command_string(_command("S", "STATUS") + Optional(_text))
+_grammar |= _command_string(_command("HELP") + Optional(_text)) | _command_string(_command("H", "HELP") + Optional(_text))
+_grammar |= _command_string(_command("QUIT") + Optional(_text)) | _command_string(_command("Q", "QUIT") + Optional(_text))
+_grammar |= _command_string(_command("OPTION") + Optional(_text)) # not supported, therefore defined liberally
 _grammar |= _command_string(_command("AUTH") + Optional(_text)) # not supported, therefore defined liberally
 _grammar |= _command_string(_command("SASLAUTH") + Optional(_text)) # not supported, therefore defined liberally
 _grammar |= _command_string(_command("SASLRESP") + Optional(_text)) # not supported, therefore defined liberally
