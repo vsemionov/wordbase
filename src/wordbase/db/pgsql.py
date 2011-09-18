@@ -109,6 +109,17 @@ class Backend(db.BackendBase):
         row = cur.fetchone()
         return row
 
+    def _get_ids(self, dictionary):
+        cur = self._cur
+        stmt = "SELECT dict_id, virt_id FROM {}.dictionaries WHERE name = %s;".format(_schema)
+        cur.execute(stmt, (dictionary,))
+        if cur.rowcount >= 1:
+            ids = cur.fetchone()
+            dict_id, virt_id = ids
+            if dict_id is not None or virt_id is not None:
+                return ids
+        self.__class__._invalid_dict(dictionary)
+
     def _get_words_real(self, dict_id):
         cur = self._cur
         stmt = "SELECT DISTINCT word FROM {}.definitions WHERE dict_id = %s;".format(_schema)
@@ -121,23 +132,27 @@ class Backend(db.BackendBase):
         stmt = "SELECT {0}.virtual_dictionaries.dict_id, {0}.dictionaries.name FROM {0}.virtual_dictionaries INNER JOIN {0}.dictionaries USING dict_id WHERE {0}.virtual_dictionaries.virt_id = %s ORDER BY {0}.dictionaries.db_order;".format(_schema)
         cur.execute(stmt, (virt_id,))
         rs = cur.fetchall()
-        return list(zip(*rs))[0]
+        return rs
 
     @pg_exc
     def get_words(self, dictionary):
-        cur = self._cur
-        stmt = "SELECT dict_id, virt_id FROM {}.dictionaries WHERE name = %s;".format(_schema)
-        cur.execute(stmt, (dictionary,))
-        if cur.rowcount >= 1:
-            dict_id, virt_id = cur.fetchone()
-            if dict_id is not None:
+        dict_id, virt_id = self._get_ids(dictionary)
+        if dict_id is not None:
+            words = self._get_words_real(dict_id)
+            res = [(dictionary, words)]
+            return res
+        else:
+            res = []
+            for dict_id, dict_name in self._get_virt_dict(virt_id):
                 words = self._get_words_real(dict_id)
-                res = [(dictionary, words)]
-                return res
-            elif virt_id is not None:
-                res = []
-                for dict_id, dict_name in self._get_virt_dict(virt_id):
-                    words = self._get_words_real(dict_id)
-                    res += (dict_name, words)
-                return res
-        self.__class__._invalid_dict(dictionary)
+                res += (dict_name, words)
+            return res
+
+    @pg_exc
+    def get_virtual_dictionary(self, dictionary):
+        dict_id, virt_id = self._get_ids(dictionary)
+        del dict_id
+        if virt_id is None:
+            self.__class__._invalid_dict(dictionary)
+        virt_dict = self._get_virt_dict(virt_id)
+        return virt_dict
