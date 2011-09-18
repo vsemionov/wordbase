@@ -58,7 +58,7 @@ def configure(config):
 
     logger.debug("initialized")
 
-def process(task, sock, addr, *args):
+def process(task, sock, *args):
     global _children, _max_children
 
     overload_logged = False
@@ -73,7 +73,7 @@ def process(task, sock, addr, *args):
         logger.debug("process started")
         status = 0
         try:
-            task(sock, addr, *args)
+            task(sock, *args)
         except Exception:
             logger.exception("unhandled exception")
             status = 1

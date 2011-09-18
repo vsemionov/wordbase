@@ -45,26 +45,26 @@ def configure(config):
 
     logger.debug("initialized")
 
-def thread_task(task, sock, addr, *args):
+def thread_task(task, sock, *args):
     with guard_sem:
         start_evt.set()
 
         logger.debug("thread started")
 
         try:
-            task(sock, addr, *args)
+            task(sock, *args)
         except Exception:
             logger.exception("unhandled exception")
         finally:
             logger.debug("thread exiting")
 
-def process(task, sock, addr, *args):
+def process(task, sock, *args):
     if not guard_sem.acquire(False):
         logger.warning("max-clients limit exceeded; waiting for a thread to terminate")
         guard_sem.acquire()
     guard_sem.release()
 
-    thr = threading.Thread(target=thread_task, args = (task, sock, addr) + args)
+    thr = threading.Thread(target=thread_task, args = (task, sock) + args)
     thr.daemon = True
     thr.start()
 
