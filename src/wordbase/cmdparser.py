@@ -69,19 +69,19 @@ def _text_action(t):
     global _ws_state
     _ws_state = ""
 
-_text = Combine(OneOrMore(_word.copy().setParseAction(_word_action) | _ws.copy().setParseAction(_ws_action))).setParseAction(_text_action)
+_text = Combine(OneOrMore(_word.copy().setParseAction(_word_action) | _ws.copy().setParseAction(_ws_action))).setParseAction(_text_action).setFailAction(lambda s, l, ex, err: _text_action(None))
 _description = _text.copy()
 
 
 _decimal = Word(nums).setParseAction(lambda t: int(t[0]))
 
-_cmd_found = None
+_cmd_state = None
 
-def _reset_cmd_action(t):
-    global _cmd_found
-    _cmd_found = None
+def _reset_cmd_state_action(t):
+    global _cmd_state
+    _cmd_state = None
 
-_reset_command = Empty().setParseAction(_reset_cmd_action)
+_reset_cmd_state = Empty().setParseAction(_reset_cmd_state_action)
 
 def _get_keyword_action(kw):
     def _keyword_action(s, l, t):
@@ -95,8 +95,8 @@ def _keyword(kw):
 
 def _get_cmd_action(cmd):
     def _cmd_action(t):
-        global _cmd_found
-        _cmd_found = cmd
+        global _cmd_state
+        _cmd_state = cmd
         return cmd
     return _cmd_action
 
@@ -113,7 +113,7 @@ def _bound_command(body):
 def _command_string(body):
     cmd_str = _bound_command(body)
     if debug.enabled:
-        cmd_str |= _bound_command(_command("T") + _decimal + _reset_command + body)
+        cmd_str |= _bound_command(_command("T") + _decimal + body)
     return cmd_str
 
 def _shortcut(s):
@@ -127,7 +127,7 @@ _show_server = _keyword("SERVER")
 
 _show_params = _show_db | _show_strat | _show_info | _show_server
 
-_grammar = _command_string(_command("") + _reset_command)
+_grammar = _command_string(_reset_cmd_state + _command(""))
 _grammar |= _command_string(_command("DEFINE") + _word + _word) | _command_string(_command("D", "DEFINE") + _shortcut("*") + _word) | _command_string(_command("D", "DEFINE") + _word + _word)
 _grammar |= _command_string(_command("MATCH") + _word + _word + _word) | _command_string(_command("M", "MATCH") + _shortcut("*") + _shortcut(".") + _word) | _command_string(_command("M", "MATCH") + _shortcut("*") + _word + _word) | _command_string(_command("M", "MATCH") + _word + _word + _word)
 _grammar |= _command_string(_command("SHOW") + _show_params)
@@ -154,4 +154,4 @@ def parse_command(line):
             return True, results
         except ParseException as pe:
             logger.debug(pe)
-            return False, _cmd_found
+            return False, _cmd_state
