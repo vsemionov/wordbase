@@ -40,6 +40,8 @@ import debug
 
 logger = logging.getLogger(__name__)
 
+STOP_DICT_NAME = "--exit--"
+
 _server_string = None
 _domain = None
 
