@@ -37,7 +37,7 @@ class BackendBase:
     def __enter__(self):
         return self.connect()
 
-    def __exit__(self, t, v, tb):
+    def __exit__(self, *args):
         self.close()
 
     def __del__(self):

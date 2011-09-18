@@ -32,78 +32,89 @@ import log
 DICT_EOL = '\r\n'
 
 
-def get_sio(sock):
-    sio = sock.makefile(mode="rw", encoding="utf-8", newline=DICT_EOL)
-    return sio
+class Connection:
+    def __init__(self, sock):
+        self._sio = sock.makefile(mode="rw", encoding="utf-8", newline=DICT_EOL)
 
-def read_line(sio):
-    """reads a line of input
-    
-    The trailing EOL is stripped.
-    
-    throws socket.timeout, EOFError, BufferError
-    """
+    def read_line(self):
+        """reads a line of input
+        
+        The trailing EOL is stripped.
+        
+        throws socket.timeout, EOFError, BufferError
+        """
 
-    buff = io.StringIO(newline='\n')
-    count = 0
-    have_cr = False
+        buff = io.StringIO(newline='\n')
+        count = 0
+        have_cr = False
 
-    while count < 1024:
-        ch = sio.read(1)
-        if not ch:
-            raise EOFError("connection closed by client")
-        buff.write(ch)
-        count += 1
+        while count < 1024:
+            ch = self._sio.read(1)
+            if not ch:
+                raise EOFError("connection closed by client")
+            buff.write(ch)
+            count += 1
 
-        if ch == '\n' and have_cr:
-            line = buff.getvalue()[:-2]
-            log.trace_client(line)
-            return line
-        have_cr = ch == '\r'
-    else:
-        raise BufferError("maximum command line length exceeded by client")
+            if ch == '\n' and have_cr:
+                line = buff.getvalue()[:-2]
+                log.trace_client(line)
+                return line
+            have_cr = ch == '\r'
+        else:
+            raise BufferError("maximum command line length exceeded by client")
 
-def _split_line(line):
-    l = len(line)
-    i = 0
-    while i < l:
-        n, pre = (1022, '') if line[i] != '.' else (1021, '.')
-        chunk = ''.join((pre, line[i:i+n]))
-        i += n
-        yield chunk
+    @staticmethod
+    def _split_line(line):
+        l = len(line)
+        i = 0
+        while i < l:
+            n, pre = (1022, '') if line[i] != '.' else (1021, '.')
+            chunk = ''.join((pre, line[i:i+n]))
+            i += n
+            yield chunk
 
-def _trunc_line(line):
-    return next(_split_line(line))
+    @classmethod
+    def _trunc_line(cls, line):
+        return next(cls._split_line(line))
 
-def _write(sio, line):
-    data = ''.join((line, DICT_EOL))
-    sio.write(data)
-    sio.flush()
-    log.trace_server(line)
+    def _write(self, line):
+        data = ''.join((line, DICT_EOL))
+        self._sio.write(data)
+        self._sio.flush()
+        log.trace_server(line)
 
-def write_line(sio, line, split=True):
-    """writes a line of output
-    
-    The line argument should not end with an EOL.
-    The first leading '.' char is doubled.
-    If split is True, lines with above-maximum length are split to multiple lines.
-    If split is False, lines with above-maximum length are truncated.
-    """
+    def write_line(self, line, split=True):
+        """writes a line of output
+        
+        The line argument should not end with an EOL.
+        The first leading '.' char is doubled.
+        If split is True, lines with above-maximum length are split to multiple lines.
+        If split is False, lines with above-maximum length are truncated.
+        """
 
-    if split:
-        for subline in _split_line(line):
-            _write(sio, subline)
-    else:
-        _write(sio, _trunc_line(line))
+        if split:
+            for subline in self.__class__._split_line(line):
+                self._write(subline)
+        else:
+            self._write(self.__class__._trunc_line(line))
 
-def write_status(sio, code, message):
-    line = "{:03d} {:s}".format(code, message)
-    write_line(sio, line, split=False)
+    def write_status(self, code, message):
+        line = "{:03d} {:s}".format(code, message)
+        self.write_line(line, split=False)
 
-def write_text_end(sio):
-    _write(sio, '.')
+    def write_text_end(self):
+        self._write('.')
 
-def write_text(sio, lines):
-    for line in lines:
-        write_line(sio, line)
-    write_text_end(sio)
+    def write_text(self, lines):
+        for line in lines:
+            self.write_line(line)
+        self.write_text_end()
+
+    def close(self):
+        self._sio.close()
+
+    def __enter__(self):
+        return self
+
+    def __exit__(self, *args):
+        self.close()

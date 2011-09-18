@@ -24,4 +24,28 @@
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 
+import traceback
+
+
 enabled = False
+
+
+class NullConnection:
+    def _not_impl(self, name):
+        method = name or traceback.extract_stack()[-2][2]
+        raise NotImplementedError("{}.{} not implemented".format(self.__class__.__name__, method))
+
+    def write_line(self, line, split=True):
+        pass
+
+    def write_status(self, code, message):
+        pass
+
+    def write_text_end(self):
+        pass
+
+    def write_text(self, lines):
+        pass
+
+    def __getattr__(self, name):
+        self._not_impl(name)

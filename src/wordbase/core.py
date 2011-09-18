@@ -27,6 +27,7 @@
 import socket
 import logging
 import random
+import time
 
 import modules
 import net
@@ -34,6 +35,7 @@ import cmdparser
 import helpmsg
 import db
 import match
+import debug
 
 
 logger = logging.getLogger(__name__)
@@ -42,62 +44,75 @@ _server_string = None
 _domain = None
 
 
-def _null_handler(sio, command):
+def _null_handler(conn, command):
     pass
 
-def _not_implemented(sio, command):
-    net.write_status(sio, 502, "Command not implemented")
+def _not_implemented(conn, command):
+    conn.write_status(502, "Command not implemented")
 
-def _handle_quit(sio, command):
-    net.write_status(sio, 221, "Closing Connection")
+def _handle_quit(conn, command):
+    conn.write_status(221, "Closing Connection")
     return True
 
-def _handle_help(sio, command):
-    net.write_status(sio, 113, "help text follows")
-    net.write_text(sio, helpmsg.help_lines)
-    net.write_status(sio, 250, "ok")
+def _handle_help(conn, command):
+    conn.write_status(113, "help text follows")
+    conn.write_text(helpmsg.help_lines)
+    conn.write_status(250, "ok")
 
-def _handle_status(sio, command):
-    net.write_status(sio, 210, "up")
+def _handle_status(conn, command):
+    conn.write_status(210, "up")
 
-def _handle_client(sio, command):
+def _handle_client(conn, command):
     logger.info("client: %s", command[1])
-    net.write_status(sio, 250, "ok")
+    conn.write_status(250, "ok")
 
-def _show_db(sio):
-    _not_implemented(sio, None)
+def _show_db(conn):
+    _not_implemented(conn, None)
 
-def _show_strat(sio):
-    _not_implemented(sio, None)
+def _show_strat(conn):
+    _not_implemented(conn, None)
 
-def _show_info(sio, database):
-    _not_implemented(sio, None)
+def _show_info(conn, database):
+    _not_implemented(conn, None)
 
-def _show_server(sio):
-    _not_implemented(sio, None)
+def _show_server(conn):
+    _not_implemented(conn, None)
 
-def _handle_show(sio, command):
+def _handle_show(conn, command):
     param = command[1]
     if param in ["DB", "DATABASES"]:
-        _show_db(sio)
+        _show_db(conn)
     elif param in ["STRAT", "STRATEGIES"]:
-        _show_strat(sio)
+        _show_strat(conn)
     elif param == "INFO":
         database = command[2]
-        _show_info(sio, database)
+        _show_info(conn, database)
     elif param == "SERVER":
-        _show_server(sio)
+        _show_server(conn)
     else:
         assert False, "unhandled SHOW command"
 
-def _handle_match(sio, command):
-    _not_implemented(sio, command)
+def _handle_match(conn, command):
+    _not_implemented(conn, command)
 
-def _handle_define(sio, command):
-    _not_implemented(sio, command)
+def _handle_define(conn, command):
+    _not_implemented(conn, command)
 
-def _handle_time_command(sio, command):
-    _not_implemented(sio, command)
+def _handle_time_command(conn, command):
+    start = time.clock()
+    null_conn = debug.NullConnection()
+    n = command[1]
+    subcmd = command[2]
+    for i in range(n):
+        _handle_command(null_conn, subcmd)
+    del i
+    end = time.clock()
+    elapsed = end - start
+
+    _handle_command(conn, subcmd)
+
+    conn.write_status(280, "time: {:.3f} s".format(elapsed))
+
 
 _cmd_handlers = {
                  "": _null_handler,
@@ -112,45 +127,44 @@ _cmd_handlers = {
                 }
 
 
-def _send_banner(sio):
+def _send_banner(conn):
     fqdn = socket.getfqdn()
     local = "{}.{}".format(random.randint(0, 9999), random.randint(0, 9999))
     msg_id = "<{}@{}>".format(local, _domain)
-    net.write_status(sio, 220, "{} {} {}".format(fqdn, _server_string, msg_id))
+    conn.write_status(220, "{} {} {}".format(fqdn, _server_string, msg_id))
 
-def _handle_syntax_error(sio, command):
+def _handle_syntax_error(conn, command):
     if command is None:
         code, msg = 500, "Syntax error, command not recognized"
     else:
         code, msg = 501, "Syntax error, illegal parameters"
-    net.write_status(sio, code, msg)
+    conn.write_status(code, msg)
 
-def _handle_command(sio, command):
+def _handle_command(conn, command):
     name = command[0]
     handler = _cmd_handlers.get(name, _not_implemented)
-    return handler(sio, command)
+    return handler(conn, command)
 
-def _session(sock):
-    with net.get_sio(sock) as sio:
-        try:
-            with modules.db().Backend() as backend:
-                _send_banner(sio)
+def _session(conn):
+    try:
+        with modules.db().Backend() as backend:
+            _send_banner(conn)
 
-                end = False
-                while not end:
-                    line = net.read_line(sio)
-                    correct, command = cmdparser.parse_command(line)
-                    if correct:
-                        end = _handle_command(sio, command)
-                    else:
-                        _handle_syntax_error(sio, command)
-        except db.BackendError as be:
-            logger.error(be)
-            net.write_status(sio, 420, "Server temporarily unavailable")
-        except (IOError, EOFError, UnicodeDecodeError, BufferError) as ex:
-            logger.error(ex)
-        except Exception as ex:
-            logger.exception("unexpected error")
+            end = False
+            while not end:
+                line = conn.read_line()
+                correct, command = cmdparser.parse_command(line)
+                if correct:
+                    end = _handle_command(conn, command)
+                else:
+                    _handle_syntax_error(conn, command)
+    except db.BackendError as be:
+        logger.error(be)
+        conn.write_status(420, "Server temporarily unavailable")
+    except (IOError, EOFError, UnicodeDecodeError, BufferError) as ex:
+        logger.error(ex)
+    except Exception as ex:
+        logger.exception("unexpected error")
 
 def configure(config):
     global _server_string, _domain
@@ -158,10 +172,10 @@ def configure(config):
     _domain = config.get("domain", "example.com")
 
 def process_session(sock, addr):
-    with sock:
+    with sock, net.Connection(sock) as conn:
         host, port = addr
         logger.info("session started from address %s:%d", host, port)
         try:
-            _session(sock)
+            _session(conn)
         finally:
             logger.info("session ended")
