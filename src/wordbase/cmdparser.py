@@ -109,9 +109,10 @@ def _reset_cmd_action(t):
 _reset_command = Empty().setParseAction(_reset_cmd_action)
 
 def _command_string(body):
+    cmd_str = _start + body + _end
     if debug.enabled:
-        body |= _command("T") + Word(nums).setParseAction(lambda t: int(t[0])) + _reset_command + body
-    return _start + body + _end
+        cmd_str |= _start + _command("T") + Word(nums).setParseAction(lambda t: int(t[0])) + _reset_command + body + _end
+    return cmd_str
 
 
 _show_db = _keyword("DB") | _keyword("DATABASES")
