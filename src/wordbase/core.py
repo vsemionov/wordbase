@@ -122,7 +122,7 @@ def _send_banner(sio):
     net.write_status(sio, 220, "{} {} {}".format(socket.getfqdn(), _server_string, msg_id))
 
 def _handle_syntax_error(sio, command):
-    if not command:
+    if command is None:
         code, msg = 500, "Syntax error, command not recognized"
     else:
         code, msg = 501, "Syntax error, illegal parameters"
