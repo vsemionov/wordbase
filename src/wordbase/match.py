@@ -70,7 +70,7 @@ def configure(config):
         for idx, strat in enumerate(strats.split()):
             name = strat.strip()
             if name:
-                if not idx:
+                if idx == 0:
                     _default_strategy = name
                 user_strats[name] = _strategies[name]
         _strategies = user_strats
