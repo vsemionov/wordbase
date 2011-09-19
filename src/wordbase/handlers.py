@@ -54,9 +54,7 @@ def _escaped(s):
     return s.replace('\\', "\\\\").replace('"', "\\\"")
 
 def _send_text(conn, text):
-    lines = text.split('\n')
-    if not len(lines[-1]):
-        del lines[-1]
+    lines = text.splitlines()
     for line in lines:
         conn.write_line(line)
 
