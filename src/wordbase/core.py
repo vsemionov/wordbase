@@ -37,15 +37,15 @@ import handlers
 
 logger = logging.getLogger(__name__)
 
-_server_string = None
-_domain = None
+_fqdn = ""
+_server_string = ""
+_domain = ""
 
 
 def _send_banner(conn):
-    fqdn = socket.getfqdn()
     local = "{}.{}".format(random.randint(0, 9999), random.randint(0, 9999))
     msg_id = "<{}@{}>".format(local, _domain)
-    conn.write_status(220, "{} {} {}".format(fqdn, _server_string, msg_id))
+    conn.write_status(220, "{} {} {}".format(_fqdn, _server_string, msg_id))
 
 def _session(conn):
     try:
@@ -69,7 +69,8 @@ def _session(conn):
         logger.exception("unexpected error")
 
 def configure(config):
-    global _server_string, _domain
+    global _fqdn, _server_string, _domain
+    _fqdn = socket.getfqdn()
     _server_string = config.get("server", "wordbase")
     _domain = config.get("domain", "example.com")
 

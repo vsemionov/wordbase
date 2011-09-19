@@ -33,6 +33,13 @@ import db
 
 logger = logging.getLogger(__name__)
 
+_host = ""
+_port = 0
+_user = ""
+_password = ""
+_database = ""
+_schema = ""
+
 
 def configure(config):
     global _host, _port, _user, _password, _database, _schema
