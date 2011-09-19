@@ -98,20 +98,17 @@ def _show_strat(conn):
 
 @handle_550
 def _show_info(conn, backend, database):
-    def send_info(name):
-        conn.write_line("============ {} ============".format(name))
-        conn.write_line("")
-        if info is not None:
-            _send_text(conn, info)
     virtual, info = backend.get_database_info(database)
     conn.write_status(112, "database information follows")
-    if info is not None or not virtual:
-        send_info(database)
-    else:
+    if info:
+        _send_text(conn, info)
+    elif virtual:
         names = backend.get_virtual_database(database)
         for name in names:
             virtual, info = backend.get_database_info(database)
-            send_info(name)
+            conn.write_line("================ {} ================".format(name))
+            if info:
+                _send_text(conn, info)
     conn.write_text_end()
     conn.write_status(250, "ok")
 
