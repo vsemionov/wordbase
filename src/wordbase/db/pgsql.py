@@ -94,32 +94,20 @@ class Backend(db.BackendBase):
     @pg_exc
     def get_databases(self):
         cur = self._cur
-        stmt = "SELECT name, short_desc FROM {}.dictionaries ORDER BY (virt_id IS NULL) DESC, db_order;".format(_schema)
+        stmt = "SELECT name, (virt_id IS NOT NULL) AS virtual, short_desc FROM {}.dictionaries ORDER BY virtual, db_order;".format(_schema)
         cur.execute(stmt)
         rs = cur.fetchall()
         return rs
 
     @pg_exc
-    def get_real_database_names(self):
-        cur = self._cur
-        stmt = "SELECT name FROM {}.dictionaries WHERE virt_id IS NULL ORDER BY db_order;".format(_schema)
-        cur.execute(stmt)
-        rs = cur.fetchall()
-        return list(zip(*rs))[0]
-
-    @staticmethod
-    def _invalid_dict(dictionary):
-        raise db.InvalidDatabaseError("invalid database: {}".format(dictionary))
-
-    @pg_exc
     def get_database_info(self, database):
         cur = self._cur
-        stmt = "SELECT (virt_id IS NOT NULL) AS virtual, info FROM {}.dictionaries WHERE name = %s AND (dict_id IS NOT NULL OR virt_id IS NOT NULL);".format(_schema)
+        stmt = "SELECT info FROM {}.dictionaries WHERE name = %s;".format(_schema)
         cur.execute(stmt, (database,))
         if cur.rowcount < 1:
-            self.__class__._invalid_dict(database)
+            self.__class__.invalid_db(database)
         row = cur.fetchone()
-        return row
+        return row[0]
 
     def _get_ids(self, database):
         cur = self._cur
@@ -130,7 +118,7 @@ class Backend(db.BackendBase):
             dict_id, virt_id = ids
             if dict_id is not None or virt_id is not None:
                 return ids
-        self.__class__._invalid_dict(database)
+        self.__class__.invalid_db(database)
 
     def _get_words_real(self, dict_id):
         cur = self._cur
@@ -149,16 +137,12 @@ class Backend(db.BackendBase):
     @pg_exc
     def get_words(self, database):
         dict_id, virt_id = self._get_ids(database)
-        if dict_id is not None:
-            words = self._get_words_real(dict_id)
-            res = [(database, words)]
-            return res
-        else:
-            res = []
-            for dict_id, dict_name in self._get_virt_dict(virt_id):
-                words = self._get_words_real(dict_id)
-                res += (dict_name, words)
-            return res
+        del virt_id
+        if dict_id is None:
+            raise ValueError("database {} is not real".format(database))
+        words = self._get_words_real(dict_id)
+        res = [(database, words)]
+        return res
 
     @pg_exc
     def get_virtual_database(self, database):

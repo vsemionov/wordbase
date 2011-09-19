@@ -34,6 +34,10 @@ class BackendError(IOError):
     pass
 
 class BackendBase:
+    @staticmethod
+    def invalid_db(name):
+        raise InvalidDatabaseError("invalid database: {}".format(name))
+
     def connect(self):
         debug.not_impl(self)
 
@@ -41,9 +45,6 @@ class BackendBase:
         debug.not_impl(self)
 
     def get_databases(self):
-        debug.not_impl(self)
-
-    def get_real_database_names(self):
         debug.not_impl(self)
 
     def get_database_info(self, database):
