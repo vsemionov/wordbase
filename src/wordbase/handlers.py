@@ -157,8 +157,8 @@ def _handle_time_command(conn, backend, command):
     n = command[1]
     subcmd = command[2]
     for i in range(n):
-        handle_command(null_conn, subcmd)
-    del i
+        handle_command(null_conn, backend, subcmd)
+    if n: del i
     end = time.clock()
     elapsed = end - start
 
