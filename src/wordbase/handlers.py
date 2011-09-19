@@ -50,6 +50,10 @@ def handle_550(func):
             conn.write_status(550, "Invalid database, use \"SHOW DB\" for list of databases")
     return wrapper
 
+def _validate_db_name(name):
+    if name == STOP_DB_NAME:
+        db.BackendBase.invalid_db(name)
+
 def _escaped(s):
     return s.replace('\\', "\\\\").replace('"', "\\\"")
 
@@ -85,8 +89,10 @@ def _show_db(conn, backend):
     n = len(dbs)
     if n:
         conn.write_status(110, "{} databases present - text follows".format(n))
+        dbs.sort(key=lambda t: t[1])
         for db in dbs:
-            name, short_desc = db
+            name, virtual, short_desc = db
+            del virtual
             line = "{} \"{}\"".format(name, _escaped(short_desc))
             conn.write_line(line)
         conn.write_text_end()
@@ -143,11 +149,54 @@ def _handle_show(conn, backend, command):
 
 @handle_550
 def _handle_match(conn, backend, command):
+    database = command[1]
+    strategy = command[2]
+    word = command[3]
+    _validate_db_name(database)
     _not_implemented(conn)
 
 @handle_550
 def _handle_define(conn, backend, command):
-    _not_implemented(conn)
+    def get_matches(db_name):
+        ml = []
+        virtual, short_desc = dbs[db_name]
+        del short_desc
+        if not virtual:
+            ml = [(db_name, strat(word, backend.get_words(db_name)))]
+        else:
+            for name in backend.get_virtual_database(db_name):
+                ml.append((name, strat(word, backend.get_words(name))))
+        return ml
+
+    database = command[1]
+    word = command[2]
+    _validate_db_name(database)
+    strat = match.get_strategy("exact")
+
+    dbs = {name: (virtual, short_desc) for (name, virtual, short_desc) in backend.get_databases()}
+
+    db_matches = []
+    if database in ("*", "!"):
+        for db in dbs:
+            name, virtual, short_desc = db
+            if virtual:
+                continue
+            if name == STOP_DB_NAME:
+                break
+            ml = get_matches(name)
+            assert len(ml) == 1, "virtual database detected"
+            db_matches.extend(ml)
+            if database == "!":
+                name, matches = ml[0]
+                if len(matches):
+                    break
+    else:
+        ml = get_matches(database)
+        db_matches.extend(ml)
+
+    if not len(db_matches):
+        conn.write_status(552, "No match")
+        return
 
 def _handle_time_command(conn, backend, command):
     start = time.clock()
