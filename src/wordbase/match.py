@@ -53,7 +53,7 @@ def get_strategy(name=None):
         def test_sample(sample):
             return test(word, _preprocess(sample))
         matches = filter(test_sample, samples)
-        return matches
+        return list(matches)
     if name is None:
         name = _default_strategy
     test = _strategies.get(name)
