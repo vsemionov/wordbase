@@ -94,7 +94,7 @@ class Backend(db.BackendBase):
     @pg_exc
     def get_databases(self):
         cur = self._cur
-        stmt = "SELECT name, (virt_id IS NOT NULL) AS virtual, short_desc FROM {}.dictionaries ORDER BY virtual, db_order;".format(_schema)
+        stmt = "SELECT name, (virt_id IS NOT NULL) AS virtual, short_desc FROM {}.dictionaries ORDER BY db_order;".format(_schema)
         cur.execute(stmt)
         rs = cur.fetchall()
         return rs
