@@ -98,7 +98,7 @@ class Backend(db.BackendBase):
 
     @staticmethod
     def _invalid_dict(dictionary):
-        raise db.InvalidDictionaryError("invalid dictionary: {}".format(dictionary))
+        raise db.InvalidDatabaseError("invalid database: {}".format(dictionary))
 
     @pg_exc
     def get_dictionary_info(self, dictionary):
@@ -154,6 +154,6 @@ class Backend(db.BackendBase):
         dict_id, virt_id = self._get_ids(dictionary)
         del dict_id
         if virt_id is None:
-            self.__class__._invalid_dict(dictionary)
+            raise ValueError("database {} is not virtual".format(dictionary))
         virt_dict = self._get_virt_dict(virt_id)
         return virt_dict

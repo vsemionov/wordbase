@@ -171,7 +171,11 @@ def _session(conn):
                 line = conn.read_line()
                 correct, command = cmdparser.parse_command(line)
                 if correct:
-                    end = _handle_command(conn, backend, command)
+                    try:
+                        end = _handle_command(conn, backend, command)
+                    except db.InvalidDatabaseError as ide:
+                        logger.debug(ide)
+                        continue
                 else:
                     _handle_syntax_error(conn, command)
     except db.BackendError as be:
