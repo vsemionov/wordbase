@@ -35,7 +35,7 @@ import debug
 
 logger = logging.getLogger(__name__)
 
-STOP_DICT_NAME = "--exit--"
+STOP_DB_NAME = "--exit--"
 
 
 def handle_550(func):
@@ -49,6 +49,13 @@ def handle_550(func):
 
 def _escaped(s):
     return s.replace('\\', "\\\\").replace('"', "\\\"")
+
+def _send_text(conn, text):
+    lines = text.split('\n')
+    if not len(lines[-1]):
+        del lines[-1]
+    for line in lines:
+        conn.write_line(line)
 
 def _null_handler(*args):
     pass
@@ -91,7 +98,22 @@ def _show_strat(conn):
 
 @handle_550
 def _show_info(conn, backend, database):
-    _not_implemented(conn)
+    def send_info(name):
+        conn.write_line("============ {} ============".format(name))
+        conn.write_line("")
+        if info is not None:
+            _send_text(conn, info)
+    virtual, info = backend.get_dictionary_info(database)
+    conn.write_status(112, "database information follows")
+    if info is not None or not virtual:
+        send_info(database)
+    else:
+        names = backend.get_virtual_dictionary(database)
+        for name in names:
+            virtual, info = backend.get_dictionary_info(database)
+            send_info(name)
+    conn.write_text_end()
+    conn.write_status(250, "ok")
 
 def _show_server(conn):
     _not_implemented(conn)

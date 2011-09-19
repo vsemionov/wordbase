@@ -57,6 +57,8 @@ def pg_exc(func):
             raise db.BackendError(ex)
     return wrap_pg_exc
 
+#TODO: define all methods in the base class
+#TODO: rename methods: dictionary -> database
 class Backend(db.BackendBase):
     def __init__(self):
         self._conn = None
@@ -103,7 +105,7 @@ class Backend(db.BackendBase):
     @pg_exc
     def get_dictionary_info(self, dictionary):
         cur = self._cur
-        stmt = "SELECT name, (virt_id IS NOT NULL) AS virtual, info FROM {}.dictionaries WHERE name = %s AND (dict_id IS NOT NULL OR virt_id IS NOT NULL);".format(_schema)
+        stmt = "SELECT (virt_id IS NOT NULL) AS virtual, info FROM {}.dictionaries WHERE name = %s AND (dict_id IS NOT NULL OR virt_id IS NOT NULL);".format(_schema)
         cur.execute(stmt, (dictionary,))
         if cur.rowcount < 1:
             self.__class__._invalid_dict(dictionary)
@@ -130,7 +132,7 @@ class Backend(db.BackendBase):
 
     def _get_virt_dict(self, virt_id):
         cur = self._cur
-        stmt = "SELECT {0}.virtual_dictionaries.dict_id, {0}.dictionaries.name FROM {0}.virtual_dictionaries INNER JOIN {0}.dictionaries USING dict_id WHERE {0}.virtual_dictionaries.virt_id = %s ORDER BY {0}.dictionaries.db_order;".format(_schema)
+        stmt = "SELECT {0}.virtual_dictionaries.dict_id, {0}.dictionaries.name FROM {0}.virtual_dictionaries INNER JOIN {0}.dictionaries USING (dict_id) WHERE {0}.virtual_dictionaries.virt_id = %s ORDER BY {0}.dictionaries.db_order;".format(_schema)
         cur.execute(stmt, (virt_id,))
         rs = cur.fetchall()
         return rs
@@ -155,5 +157,6 @@ class Backend(db.BackendBase):
         del dict_id
         if virt_id is None:
             raise ValueError("database {} is not virtual".format(dictionary))
-        virt_dict = self._get_virt_dict(virt_id)
+        rs = self._get_virt_dict(virt_id)
+        virt_dict = list(zip(*rs))[1]
         return virt_dict
