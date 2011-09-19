@@ -102,12 +102,12 @@ class Backend(db.BackendBase):
     @pg_exc
     def get_database_info(self, database):
         cur = self._cur
-        stmt = "SELECT info FROM {}.dictionaries WHERE name = %s;".format(_schema)
+        stmt = "SELECT (virt_id IS NOT NULL) AS virtual, info FROM {}.dictionaries WHERE name = %s;".format(_schema)
         cur.execute(stmt, (database,))
         if cur.rowcount < 1:
             self.__class__.invalid_db(database)
         row = cur.fetchone()
-        return row[0]
+        return row
 
     def _get_ids(self, database):
         cur = self._cur
