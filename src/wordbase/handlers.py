@@ -38,6 +38,15 @@ logger = logging.getLogger(__name__)
 STOP_DICT_NAME = "--exit--"
 
 
+def handle_550(func):
+    def wrapper(conn, *args):
+        try:
+            func(conn, *args)
+        except db.InvalidDatabaseError as ide:
+            logger.debug(ide)
+            conn.write_status(550, "Invalid database, use \"SHOW DB\" for list of databases")
+    return wrapper
+
 def _escaped(s):
     return s.replace('\\', "\\\\").replace('"', "\\\"")
 
@@ -80,6 +89,7 @@ def _show_db(conn, backend):
 def _show_strat(conn):
     _not_implemented(conn)
 
+@handle_550
 def _show_info(conn, backend, database):
     _not_implemented(conn)
 
@@ -100,9 +110,11 @@ def _handle_show(conn, backend, command):
     else:
         assert False, "unhandled SHOW command"
 
+@handle_550
 def _handle_match(conn, backend, command):
     _not_implemented(conn)
 
+@handle_550
 def _handle_define(conn, backend, command):
     _not_implemented(conn)
 

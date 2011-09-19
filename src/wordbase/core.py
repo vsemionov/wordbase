@@ -57,12 +57,7 @@ def _session(conn):
                 line = conn.read_line()
                 correct, command = cmdparser.parse_command(line)
                 if correct:
-                    try:
-                        end = handlers.handle_command(conn, backend, command)
-                    except db.InvalidDatabaseError as ide:
-                        logger.debug(ide)
-                        conn.write_status(550, "Invalid database, use \"SHOW DB\" for list of databases")
-                        continue
+                    end = handlers.handle_command(conn, backend, command)
                 else:
                     handlers.handle_syntax_error(conn, command)
     except db.BackendError as be:
