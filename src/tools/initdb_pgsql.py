@@ -45,7 +45,7 @@ create_dictionaries = "CREATE TABLE {0}.dictionaries (" \
                         "dict_id INTEGER UNIQUE DEFAULT nextval('{0}.dictionaries_dict_id_seq'), " \
                         "virt_id INTEGER UNIQUE DEFAULT nextval('{0}.dictionaries_virt_id_seq'), " \
                         "db_order INTEGER UNIQUE, " \
-                        "name VARCHAR(32) UNIQUE NOT NULL CHECK (name ~ '^[^ ''\"\\\\\\\\]+$'), " \
+                        "name VARCHAR(32) UNIQUE NOT NULL CHECK (name NOT IN ('*', '!') AND name ~ '^[^ ''\"\\\\\\\\]+$'), " \
                         "short_desc VARCHAR(128) NOT NULL, " \
                         "info TEXT, " \
                         "CHECK ((dict_id IS NOT NULL AND virt_id IS NULL) OR (dict_id IS NULL AND virt_id IS NOT NULL) OR (name = '--exit--' AND dict_id IS NULL AND virt_id IS NULL AND info IS NULL))" \
