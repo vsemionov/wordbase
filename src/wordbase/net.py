@@ -63,6 +63,7 @@ class Connection:
         else:
             raise BufferError("maximum command line length exceeded by client")
 
+    #TODO: skips empty lines
     @staticmethod
     def _split_line(line):
         l = len(line)
