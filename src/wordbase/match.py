@@ -24,7 +24,53 @@
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 
-#TODO: when matching a word, first do the following to the both the input and database word: remove any punctuation characters, then trim whitespace, then normalize whitespace, then lowercase
-#TODO: when defining a word, return the definitions for all words that match with the exact strategy
+import string
+import collections
+
+
+_no_punctuation = {ord(c): None for c in string.punctuation}
+
+def _preprocess(word):
+    return ' '.join(word.translate(_no_punctuation).split()).lower()
+
+def _match_exact(word, sample):
+    return word == sample
+
+def _match_prefix(word, sample):
+    return sample.startswith(word)
+
+_strategies = collections.OrderedDict((
+                                       ("exact", _match_exact),
+                                       ("prefix", _match_prefix),
+                                     ))
+
+_default_strategy = "prefix"
+
+
+def get_strategy(name=None):
+    def find_matches(word, samples):
+        word = _preprocess(word)
+        def test_sample(sample):
+            return test(word, _preprocess(sample))
+        matches = filter(test_sample, samples)
+        return matches
+    if name is None:
+        name = _default_strategy
+    test = _strategies.get(name)
+    return test and find_matches
+
+def get_strategies():
+    return _strategies.keys()
+
 def configure(config):
-    config.get("strategies", "")
+    strats = config.get("strategies", "")
+    if strats:
+        global _strategies, _default_strategy
+        user_strats = collections.OrderedDict()
+        for idx, strat in enumerate(strats.split()):
+            name = strat.strip()
+            if name:
+                if not idx:
+                    _default_strategy = name
+                user_strats[name] = _strategies[name]
+        _strategies = user_strats
