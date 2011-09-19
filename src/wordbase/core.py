@@ -73,6 +73,9 @@ def configure(config):
     _server_string = config.get("server", "wordbase")
     _domain = config.get("domain", "example.com")
 
+    info = config.get("info", "")
+    handlers.configure(_server_string, info)
+
 def process_session(sock, addr):
     with sock, net.Connection(sock) as conn:
         host, port = addr

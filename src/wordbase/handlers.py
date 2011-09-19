@@ -37,6 +37,9 @@ logger = logging.getLogger(__name__)
 
 STOP_DB_NAME = "--exit--"
 
+_server_string = ""
+_server_info = ""
+
 
 def handle_550(func):
     def wrapper(conn, *args):
@@ -113,7 +116,18 @@ def _show_info(conn, backend, database):
     conn.write_status(250, "ok")
 
 def _show_server(conn):
-    _not_implemented(conn)
+    info = open(_server_info) if _server_info else None
+    try:
+        conn.write_status(114, "server information follows")
+        conn.write_line(_server_string)
+        if info:
+            for line in info:
+                conn.write_line(line.rstrip('\n'))
+    finally:
+        if info:
+            info.close()
+    conn.write_text_end()
+    conn.write_status(250, "ok")
 
 def _handle_show(conn, backend, command):
     param = command[1]
@@ -177,3 +191,8 @@ def handle_command(conn, backend, command):
     name = command[0]
     handler = _cmd_handlers.get(name, _not_implemented)
     return handler(conn, backend, command)
+
+def configure(server_string, server_info):
+    global _server_string, _server_info
+    _server_string = server_string
+    _server_info = server_info
