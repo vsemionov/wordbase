@@ -27,10 +27,13 @@
 import debug
 
 
+class BackendError(IOError):
+    pass
+
 class InvalidDatabaseError(ValueError):
     pass
 
-class BackendError(IOError):
+class VirtualDatabaseError(ValueError):
     pass
 
 class BackendBase:
