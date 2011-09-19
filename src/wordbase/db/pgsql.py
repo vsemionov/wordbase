@@ -129,10 +129,10 @@ class Backend(db.BackendBase):
 
     def _get_virt_dict(self, virt_id):
         cur = self._cur
-        stmt = "SELECT {0}.virtual_dictionaries.dict_id, {0}.dictionaries.name FROM {0}.virtual_dictionaries INNER JOIN {0}.dictionaries USING (dict_id) WHERE {0}.virtual_dictionaries.virt_id = %s ORDER BY {0}.dictionaries.db_order;".format(_schema)
+        stmt = "SELECT name FROM {0}.dictionaries INNER JOIN {0}.virtual_dictionaries USING (dict_id) WHERE {0}.virtual_dictionaries.virt_id = %s ORDER BY db_order;".format(_schema)
         cur.execute(stmt, (virt_id,))
         rs = cur.fetchall()
-        return rs
+        return list(zip(*rs))[0]
 
     @pg_exc
     def get_words(self, database):
@@ -149,8 +149,7 @@ class Backend(db.BackendBase):
         del dict_id
         if virt_id is None:
             raise db.VirtualDatabaseError("database {} is not virtual".format(database))
-        rs = self._get_virt_dict(virt_id)
-        virt_dict = list(zip(*rs))[1]
+        virt_dict = self._get_virt_dict(virt_id)
         return virt_dict
 
     @pg_exc
