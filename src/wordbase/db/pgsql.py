@@ -141,8 +141,7 @@ class Backend(db.BackendBase):
         if dict_id is None:
             raise db.VirtualDatabaseError("database {} is not real".format(database))
         words = self._get_words_real(dict_id)
-        res = [(database, words)]
-        return res
+        return words
 
     @pg_exc
     def get_virtual_database(self, database):
