@@ -24,5 +24,7 @@
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 
+#TODO: when matching a word, first do the following to the both the input and database word: remove any punctuation characters, then trim whitespace, then normalize whitespace, then lowercase
+#TODO: when defining a word, return the definitions for all words that match with the exact strategy
 def configure(config):
     config.get("strategies", "")
