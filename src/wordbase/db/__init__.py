@@ -40,6 +40,24 @@ class BackendBase:
     def close(self):
         debug.not_impl(self)
 
+    def get_databases(self):
+        debug.not_impl(self)
+
+    def get_real_database_names(self):
+        debug.not_impl(self)
+
+    def get_database_info(self, database):
+        debug.not_impl(self)
+
+    def get_words(self, database):
+        debug.not_impl(self)
+
+    def get_virtual_database(self, database):
+        debug.not_impl(self)
+
+    def get_definitions(self, database, word):
+        debug.not_impl(self)
+
     def __enter__(self):
         self.connect()
         return self

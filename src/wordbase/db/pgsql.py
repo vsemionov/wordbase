@@ -57,8 +57,6 @@ def pg_exc(func):
             raise db.BackendError(ex)
     return wrap_pg_exc
 
-#TODO: define all methods in the base class
-#TODO: rename methods: dictionary -> database
 class Backend(db.BackendBase):
     def __init__(self):
         self._conn = None
@@ -83,7 +81,7 @@ class Backend(db.BackendBase):
             logger.debug("closed the pgsql connection")
 
     @pg_exc
-    def get_dictionaries(self):
+    def get_databases(self):
         cur = self._cur
         stmt = "SELECT name, short_desc FROM {}.dictionaries ORDER BY (virt_id IS NULL) DESC, db_order;".format(_schema)
         cur.execute(stmt)
@@ -91,7 +89,7 @@ class Backend(db.BackendBase):
         return rs
 
     @pg_exc
-    def get_real_dictionary_names(self):
+    def get_real_database_names(self):
         cur = self._cur
         stmt = "SELECT name FROM {}.dictionaries WHERE virt_id IS NULL ORDER BY db_order;".format(_schema)
         cur.execute(stmt)
@@ -103,25 +101,25 @@ class Backend(db.BackendBase):
         raise db.InvalidDatabaseError("invalid database: {}".format(dictionary))
 
     @pg_exc
-    def get_dictionary_info(self, dictionary):
+    def get_database_info(self, database):
         cur = self._cur
         stmt = "SELECT (virt_id IS NOT NULL) AS virtual, info FROM {}.dictionaries WHERE name = %s AND (dict_id IS NOT NULL OR virt_id IS NOT NULL);".format(_schema)
-        cur.execute(stmt, (dictionary,))
+        cur.execute(stmt, (database,))
         if cur.rowcount < 1:
-            self.__class__._invalid_dict(dictionary)
+            self.__class__._invalid_dict(database)
         row = cur.fetchone()
         return row
 
-    def _get_ids(self, dictionary):
+    def _get_ids(self, database):
         cur = self._cur
         stmt = "SELECT dict_id, virt_id FROM {}.dictionaries WHERE name = %s;".format(_schema)
-        cur.execute(stmt, (dictionary,))
+        cur.execute(stmt, (database,))
         if cur.rowcount >= 1:
             ids = cur.fetchone()
             dict_id, virt_id = ids
             if dict_id is not None or virt_id is not None:
                 return ids
-        self.__class__._invalid_dict(dictionary)
+        self.__class__._invalid_dict(database)
 
     def _get_words_real(self, dict_id):
         cur = self._cur
@@ -138,11 +136,11 @@ class Backend(db.BackendBase):
         return rs
 
     @pg_exc
-    def get_words(self, dictionary):
-        dict_id, virt_id = self._get_ids(dictionary)
+    def get_words(self, database):
+        dict_id, virt_id = self._get_ids(database)
         if dict_id is not None:
             words = self._get_words_real(dict_id)
-            res = [(dictionary, words)]
+            res = [(database, words)]
             return res
         else:
             res = []
@@ -152,11 +150,19 @@ class Backend(db.BackendBase):
             return res
 
     @pg_exc
-    def get_virtual_dictionary(self, dictionary):
-        dict_id, virt_id = self._get_ids(dictionary)
+    def get_virtual_database(self, database):
+        dict_id, virt_id = self._get_ids(database)
         del dict_id
         if virt_id is None:
-            raise ValueError("database {} is not virtual".format(dictionary))
+            raise ValueError("database {} is not virtual".format(database))
         rs = self._get_virt_dict(virt_id)
         virt_dict = list(zip(*rs))[1]
         return virt_dict
+
+    @pg_exc
+    def get_definitions(self, database, word):
+        cur = self._cur
+        stmt = "SELECT definition FROM {0}.definitions WHERE dict_id = (SELECT dict_id FROM {0}.dictionaries WHERE name = %s) AND word = %s;".format(_schema)
+        cur.execute(stmt, (database, word))
+        rs = cur.fetchall()
+        return list(zip(*rs))[0]

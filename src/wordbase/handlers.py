@@ -80,7 +80,7 @@ def _handle_client(conn, backend, command):
     conn.write_status(250, "ok")
 
 def _show_db(conn, backend):
-    dbs = backend.get_dictionaries()
+    dbs = backend.get_databases()
     n = len(dbs)
     if n:
         conn.write_status(110, "{} databases present - text follows".format(n))
@@ -103,14 +103,14 @@ def _show_info(conn, backend, database):
         conn.write_line("")
         if info is not None:
             _send_text(conn, info)
-    virtual, info = backend.get_dictionary_info(database)
+    virtual, info = backend.get_database_info(database)
     conn.write_status(112, "database information follows")
     if info is not None or not virtual:
         send_info(database)
     else:
-        names = backend.get_virtual_dictionary(database)
+        names = backend.get_virtual_database(database)
         for name in names:
-            virtual, info = backend.get_dictionary_info(database)
+            virtual, info = backend.get_database_info(database)
             send_info(name)
     conn.write_text_end()
     conn.write_status(250, "ok")
