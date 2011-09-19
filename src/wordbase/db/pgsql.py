@@ -52,7 +52,7 @@ def _statement(stmt):
 def pg_exc(func):
     def wrap_pg_exc(*args):
         try:
-            func(*args)
+            return func(*args)
         except (psycopg2.Error, psycopg2.Warning) as ex:
             raise db.BackendError(ex)
     return wrap_pg_exc
@@ -60,6 +60,7 @@ def pg_exc(func):
 class Backend(db.BackendBase):
     def __init__(self):
         self._conn = None
+        self._cur = None
 
     @pg_exc
     def connect(self):
