@@ -46,61 +46,75 @@ _server_string = None
 _domain = None
 
 
-def _null_handler(conn, command):
+def _escaped(s):
+    return s.replace('\\', "\\\\").replace('"', "\\\"")
+
+def _null_handler(*args):
     pass
 
-def _not_implemented(conn, command):
+def _not_implemented(conn, *args):
     conn.write_status(502, "Command not implemented")
 
-def _handle_quit(conn, command):
+def _handle_quit(conn, *args):
     conn.write_status(221, "Closing Connection")
     return True
 
-def _handle_help(conn, command):
+def _handle_help(conn, *args):
     conn.write_status(113, "help text follows")
     conn.write_text(helpmsg.help_lines)
     conn.write_status(250, "ok")
 
-def _handle_status(conn, command):
+def _handle_status(conn, *args):
     conn.write_status(210, "up")
 
-def _handle_client(conn, command):
+def _handle_client(conn, backend, command):
     logger.info("client: %s", command[1])
     conn.write_status(250, "ok")
 
-def _show_db(conn):
-    _not_implemented(conn, None)
+def _show_db(conn, backend):
+    dbs = backend.get_dictionaries()
+    n = len(dbs)
+    if n:
+        conn.write_status(110, "{} databases present - text follows".format(n))
+        for db in dbs:
+            name, short_desc = db
+            line = "{} \"{}\"".format(name, _escaped(short_desc))
+            conn.write_line(line)
+        conn.write_text_end()
+        conn.write_status(250, "ok")
+    else:
+        conn.write_status(554, "No databases present")
 
 def _show_strat(conn):
-    _not_implemented(conn, None)
+    _not_implemented(conn)
 
-def _show_info(conn, database):
-    _not_implemented(conn, None)
+def _show_info(conn, backend, database):
+    _not_implemented(conn)
 
 def _show_server(conn):
-    _not_implemented(conn, None)
+    _not_implemented(conn)
 
-def _handle_show(conn, command):
+def _handle_show(conn, backend, command):
     param = command[1]
     if param in ["DB", "DATABASES"]:
-        _show_db(conn)
+        _show_db(conn, backend)
     elif param in ["STRAT", "STRATEGIES"]:
         _show_strat(conn)
     elif param == "INFO":
         database = command[2]
-        _show_info(conn, database)
+        _show_info(conn, backend, database)
     elif param == "SERVER":
         _show_server(conn)
     else:
         assert False, "unhandled SHOW command"
 
-def _handle_match(conn, command):
-    _not_implemented(conn, command)
+def _handle_match(conn, backend, command):
+    _not_implemented(conn)
 
-def _handle_define(conn, command):
-    _not_implemented(conn, command)
+def _handle_define(conn, backend, command):
+    _not_implemented(conn)
 
-def _handle_time_command(conn, command):
+def _handle_time_command(conn, backend, command):
     start = time.clock()
     null_conn = debug.NullConnection()
     n = command[1]
@@ -111,7 +125,7 @@ def _handle_time_command(conn, command):
     end = time.clock()
     elapsed = end - start
 
-    _handle_command(conn, subcmd)
+    _handle_command(conn, backend, subcmd)
 
     conn.write_status(280, "time: {:.3f} s".format(elapsed))
 
@@ -142,10 +156,10 @@ def _handle_syntax_error(conn, command):
         code, msg = 501, "Syntax error, illegal parameters"
     conn.write_status(code, msg)
 
-def _handle_command(conn, command):
+def _handle_command(conn, backend, command):
     name = command[0]
     handler = _cmd_handlers.get(name, _not_implemented)
-    return handler(conn, command)
+    return handler(conn, backend, command)
 
 def _session(conn):
     try:
@@ -157,7 +171,7 @@ def _session(conn):
                 line = conn.read_line()
                 correct, command = cmdparser.parse_command(line)
                 if correct:
-                    end = _handle_command(conn, command)
+                    end = _handle_command(conn, backend, command)
                 else:
                     _handle_syntax_error(conn, command)
     except db.BackendError as be:
