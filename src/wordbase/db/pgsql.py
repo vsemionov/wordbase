@@ -139,7 +139,7 @@ class Backend(db.BackendBase):
         dict_id, virt_id = self._get_ids(database)
         del virt_id
         if dict_id is None:
-            raise ValueError("database {} is not real".format(database))
+            raise db.VirtualDatabaseError("database {} is not real".format(database))
         words = self._get_words_real(dict_id)
         res = [(database, words)]
         return res
@@ -149,7 +149,7 @@ class Backend(db.BackendBase):
         dict_id, virt_id = self._get_ids(database)
         del dict_id
         if virt_id is None:
-            raise ValueError("database {} is not virtual".format(database))
+            raise db.VirtualDatabaseError("database {} is not virtual".format(database))
         rs = self._get_virt_dict(virt_id)
         virt_dict = list(zip(*rs))[1]
         return virt_dict
