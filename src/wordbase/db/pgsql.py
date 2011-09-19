@@ -64,6 +64,10 @@ def pg_exc(func):
             raise db.BackendError(ex)
     return wrap_pg_exc
 
+#TODO: use prepared statements; prepare them lazily, i.e. before first use
+#TODO: use a named cursor for retrieving word lists to avoid buffering fetching all data at once
+#TODO: return an iterator instead of a list of words to avoid buffering all data at once
+#TODO: test and tune performance, measure current version vs version with named cursors and iterators, tune arraysize parameter of psycopg2
 class Backend(db.BackendBase):
     def __init__(self):
         self._conn = None
