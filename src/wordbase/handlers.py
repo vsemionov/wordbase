@@ -42,13 +42,13 @@ _server_info = ""
 
 
 def handle_550(func):
-    def wrapper(conn, *args):
+    def error_550_wrapper(conn, *args):
         try:
             func(conn, *args)
         except db.InvalidDatabaseError as ide:
             logger.debug(ide)
             conn.write_status(550, "Invalid database, use \"SHOW DB\" for list of databases")
-    return wrapper
+    return error_550_wrapper
 
 def _validate_db_name(name):
     if name == STOP_DB_NAME:
@@ -105,6 +105,8 @@ def _show_strat(conn):
 
 @handle_550
 def _show_info(conn, backend, database):
+    _validate_db_name(database)
+
     virtual, info = backend.get_database_info(database)
     conn.write_status(112, "database information follows")
     if info:
@@ -149,11 +151,72 @@ def _handle_show(conn, backend, command):
 
 @handle_550
 def _handle_match(conn, backend, command):
+    def get_matches(db_name):
+        def add_matches(db_name):
+            matches = strat(word, backend.get_words(db_name))
+            ml.append((name, matches))
+            return len(matches)
+
+        nmatches = 0
+        ml = []
+        virtual, short_desc = dbs[db_name]
+        del short_desc
+        if not virtual:
+            nmatches += add_matches(db_name)
+        else:
+            for name in backend.get_virtual_database(db_name):
+                nmatches += add_matches(name)
+        return nmatches, ml
+
     database = command[1]
     strategy = command[2]
     word = command[3]
+
     _validate_db_name(database)
-    _not_implemented(conn)
+
+    strategy_eff = strategy if strategy != "." else None
+    strat = match.get_strategy(strategy_eff)
+    if strat is None:
+        conn.write_status(551, "Invalid strategy, use \"SHOW STRAT\" for a list of strategies")
+        return
+
+    dbs = {name: (virtual, short_desc) for (name, virtual, short_desc) in backend.get_databases()}
+
+    num_matches = 0
+
+    db_match_defs = []
+    if database in ("*", "!"):
+        for db in dbs:
+            name, virtual, short_desc = db
+            if virtual:
+                continue
+            if name == STOP_DB_NAME:
+                break
+            nm, ml = get_matches(name)
+            assert len(ml) == 1, "virtual database detected"
+            db_match_defs.extend(ml)
+            num_matches += nm
+            if database == "!":
+                if nm:
+                    break
+    else:
+        nm, ml = get_matches(database)
+        db_match_defs.extend(ml)
+        num_matches = nm
+
+    if not num_matches:
+        conn.write_status(552, "No match")
+        return
+
+    conn.write_status(152, "{} matches found - text follows".format(num_matches))
+
+    for name, matches in db_match_defs:
+        for m in matches:
+            escaped_match = _escaped(m)
+            conn.write_line("{} \"{}\"".format(name, escaped_match))
+
+    conn.write_text_end()
+    conn.write_status(250, "ok")
 
 @handle_550
 def _handle_define(conn, backend, command):
@@ -162,20 +225,24 @@ def _handle_define(conn, backend, command):
             words = strat(word, backend.get_words(db_name))
             matches = [(wd, []) for wd in words]
             ml.append((name, matches))
+            return len(matches)
 
+        nmatches = 0
         ml = []
         virtual, short_desc = dbs[db_name]
         del short_desc
         if not virtual:
-            add_matches(db_name)
+            nmatches += add_matches(db_name)
         else:
             for name in backend.get_virtual_database(db_name):
-                add_matches(name)
-        return ml
+                nmatches += add_matches(name)
+        return nmatches, ml
 
     database = command[1]
     word = command[2]
+
     _validate_db_name(database)
+
     strat = match.get_strategy("exact")
 
     dbs = {name: (virtual, short_desc) for (name, virtual, short_desc) in backend.get_databases()}
@@ -188,15 +255,14 @@ def _handle_define(conn, backend, command):
                 continue
             if name == STOP_DB_NAME:
                 break
-            ml = get_matches(name)
+            nm, ml = get_matches(name)
             assert len(ml) == 1, "virtual database detected"
             db_match_defs.extend(ml)
             if database == "!":
-                name, matches = ml[0]
-                if len(matches):
+                if nm:
                     break
     else:
-        ml = get_matches(database)
+        nm, ml = get_matches(database)
         db_match_defs.extend(ml)
 
     num_defs = 0
