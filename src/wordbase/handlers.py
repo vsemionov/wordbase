@@ -101,7 +101,20 @@ def _show_db(conn, backend):
         conn.write_status(554, "No databases present")
 
 def _show_strat(conn):
-    _not_implemented(conn)
+    strats = match.get_strategies()
+    num_strats = len(strats)
+
+    if not num_strats:
+        conn.write_status(555, "No strategies available")
+        return
+
+    conn.write_status(111, "{} strategies available - text follows".format(num_strats))
+
+    for name, desc in strats.items():
+        escaped_desc = _escaped(desc)
+        conn.write_line("{} \"{}\"".format(name, escaped_desc))
+
+    conn.write_text_end()
 
 @handle_550
 def _show_info(conn, backend, database):

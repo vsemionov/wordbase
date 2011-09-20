@@ -40,8 +40,8 @@ def _match_prefix(word, sample):
     return sample.startswith(word)
 
 _strategies = collections.OrderedDict((
-                                       ("exact", _match_exact),
-                                       ("prefix", _match_prefix),
+                                       ("exact", ("Match headwords exactly", _match_exact)),
+                                       ("prefix", ("Match prefixes", _match_prefix)),
                                      ))
 
 _default_strategy = "prefix"
@@ -56,11 +56,15 @@ def get_strategy(name=None):
         return list(matches)
     if name is None:
         name = _default_strategy
-    test = _strategies.get(name)
+    desc, test = _strategies.get(name)
+    del desc
     return test and find_matches
 
 def get_strategies():
-    return _strategies.keys()
+    func = None
+    func = func
+    strats = collections.OrderedDict([(name, desc) for name, (desc, func) in _strategies.items()])
+    return strats
 
 def configure(config):
     strats = config.get("strategies", "")
