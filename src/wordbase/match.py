@@ -67,14 +67,22 @@ def get_strategies():
     return strats
 
 def configure(config):
-    strats = config.get("strategies", "")
-    if strats:
+    strategies = config.get("strategies", "")
+    if strategies:
+        parts = strategies.split(':')
+        default, strats = parts
+
         global _strategies, _default_strategy
         user_strats = collections.OrderedDict()
-        for idx, strat in enumerate(strats.split()):
+        for strat in strats.split(','):
             name = strat.strip()
             if name:
-                if idx == 0:
-                    _default_strategy = name
+                if name not in _strategies:
+                    raise ValueError("unsupported strategy: {}".format(name))
                 user_strats[name] = _strategies[name]
         _strategies = user_strats
+
+        default = default.strip()
+        if default not in _strategies:
+            raise ValueError("default strategy not in list of advertised strategies")
+        _default_strategy = default

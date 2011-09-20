@@ -213,7 +213,7 @@ def main():
     logger = logging.getLogger(PROGRAM_NAME)
 
     with open(conf_path) as conf:
-        config = configparser.ConfigParser(inline_comment_prefixes="#")
+        config = configparser.ConfigParser(delimiters="=", inline_comment_prefixes="#")
         config.read_file(conf, conf_path)
 
     server_control(config, daemon)
