@@ -54,11 +54,17 @@ def get_strategy(name=None):
             return test(word, _preprocess(sample))
         matches = filter(test_sample, samples)
         return list(matches)
+
     if name is None:
         name = _default_strategy
-    desc, test = _strategies.get(name)
+
+    strat = _strategies.get(name)
+    if strat is None:
+        return None
+    desc, test = strat
     del desc
-    return test and find_matches
+
+    return find_matches
 
 def get_strategies():
     func = None
