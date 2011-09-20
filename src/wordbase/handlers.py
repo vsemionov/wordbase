@@ -162,10 +162,14 @@ def _handle_define(conn, backend, command):
         virtual, short_desc = dbs[db_name]
         del short_desc
         if not virtual:
-            ml = [(db_name, strat(word, backend.get_words(db_name)))]
+            words = strat(word, backend.get_words(db_name))
+            matches = [(wd, []) for wd in words]
+            ml = [(db_name, matches)]
         else:
             for name in backend.get_virtual_database(db_name):
-                ml.append((name, strat(word, backend.get_words(name))))
+                words = strat(word, backend.get_words(name))
+                matches = [(wd, []) for wd in words]
+                ml.append((name, matches))
         return ml
 
     database = command[1]
@@ -175,7 +179,7 @@ def _handle_define(conn, backend, command):
 
     dbs = {name: (virtual, short_desc) for (name, virtual, short_desc) in backend.get_databases()}
 
-    db_matches = []
+    db_match_defs = []
     if database in ("*", "!"):
         for db in dbs:
             name, virtual, short_desc = db
@@ -185,18 +189,40 @@ def _handle_define(conn, backend, command):
                 break
             ml = get_matches(name)
             assert len(ml) == 1, "virtual database detected"
-            db_matches.extend(ml)
+            db_match_defs.extend(ml)
             if database == "!":
                 name, matches = ml[0]
                 if len(matches):
                     break
     else:
         ml = get_matches(database)
-        db_matches.extend(ml)
+        db_match_defs.extend(ml)
 
-    if not len(db_matches):
+    num_defs = 0
+
+    for name, matches in db_match_defs:
+        for wd, defs in matches:
+            res = backend.get_definitions(name, wd)
+            defs.extend(res)
+            num_defs += len(res)
+
+    if not num_defs:
         conn.write_status(552, "No match")
         return
+
+    conn.write_status(150, "{} definitions retrieved - definitions follow".format(num_defs))
+
+    for name, matches in db_match_defs:
+        virtual, short_desc = dbs[name]
+        escaped_short_desc = _escaped(short_desc)
+        for wd, defs in matches:
+            escaped_word = _escaped(wd)
+            for definition in defs:
+                conn.write_status(151, "\"{}\" {} \"{}\" - text follows".format(escaped_word, name, escaped_short_desc))
+                _send_text(conn, definition)
+                conn.write_text_end()
+
+    conn.write_status(250, "ok")
 
 def _handle_time_command(conn, backend, command):
     start = time.clock()
