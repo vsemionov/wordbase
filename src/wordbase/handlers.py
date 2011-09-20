@@ -158,18 +158,19 @@ def _handle_match(conn, backend, command):
 @handle_550
 def _handle_define(conn, backend, command):
     def get_matches(db_name):
+        def add_matches(db_name):
+            words = strat(word, backend.get_words(db_name))
+            matches = [(wd, []) for wd in words]
+            ml.append((name, matches))
+
         ml = []
         virtual, short_desc = dbs[db_name]
         del short_desc
         if not virtual:
-            words = strat(word, backend.get_words(db_name))
-            matches = [(wd, []) for wd in words]
-            ml = [(db_name, matches)]
+            add_matches(db_name)
         else:
             for name in backend.get_virtual_database(db_name):
-                words = strat(word, backend.get_words(name))
-                matches = [(wd, []) for wd in words]
-                ml.append((name, matches))
+                add_matches(name)
         return ml
 
     database = command[1]
