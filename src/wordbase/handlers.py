@@ -154,7 +154,7 @@ def _handle_match(conn, backend, command):
     def get_matches(db_name):
         def add_matches(db_name):
             matches = strat(word, backend.get_words(db_name))
-            ml.append((name, matches))
+            ml.append((db_name, matches))
             return len(matches)
 
         nmatches = 0
@@ -186,8 +186,7 @@ def _handle_match(conn, backend, command):
 
     db_match_defs = []
     if database in ("*", "!"):
-        for db in dbs:
-            name, virtual, short_desc = db
+        for name, (virtual, short_desc) in dbs.items():
             if virtual:
                 continue
             if name == STOP_DB_NAME:
@@ -224,7 +223,7 @@ def _handle_define(conn, backend, command):
         def add_matches(db_name):
             words = strat(word, backend.get_words(db_name))
             matches = [(wd, []) for wd in words]
-            ml.append((name, matches))
+            ml.append((db_name, matches))
             return len(matches)
 
         nmatches = 0
@@ -249,8 +248,7 @@ def _handle_define(conn, backend, command):
 
     db_match_defs = []
     if database in ("*", "!"):
-        for db in dbs:
-            name, virtual, short_desc = db
+        for name, (virtual, short_desc) in dbs.items():
             if virtual:
                 continue
             if name == STOP_DB_NAME:
