@@ -118,7 +118,7 @@ class Backend(db.BackendBase):
 
     def _get_words_real(self, dict_id):
         cur = self._cur
-        stmt = "SELECT DISTINCT word FROM {}.definitions WHERE dict_id = %s;".format(_schema)
+        stmt = "SELECT DISTINCT word FROM {}.definitions WHERE dict_id = %s ORDER BY word;".format(_schema)
         cur.execute(stmt, (dict_id,))
         rs = cur.fetchall()
         return list(zip(*rs))[0]
