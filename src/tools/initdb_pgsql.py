@@ -68,6 +68,8 @@ alter_dict_id_seq = "ALTER SEQUENCE {0}.dictionaries_dict_id_seq OWNED BY {0}.di
 
 alter_virt_id_seq = "ALTER SEQUENCE {0}.dictionaries_virt_id_seq OWNED BY {0}.dictionaries.virt_id;"
 
+create_definitions_dict_id_word_idx = "CREATE INDEX definitions_dict_id_word_idx ON {}.definitions (dict_id, word);"
+
 script_name = os.path.basename(__file__)
 
 
@@ -85,6 +87,7 @@ def init_pgsql_task(cur, schema):
     cur.execute(create_virtual_dictionaries.format(schema))
     cur.execute(alter_dict_id_seq.format(schema))
     cur.execute(alter_virt_id_seq.format(schema))
+    cur.execute(create_definitions_dict_id_word_idx.format(schema))
 
 
 pgutil.get_pgsql_params(None, 0, 0, usage)
