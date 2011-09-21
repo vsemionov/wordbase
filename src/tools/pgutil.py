@@ -102,13 +102,7 @@ def process_pgsql_task(task, *args):
     finally:
         conn.close()
 
-def _sort_words(defs):
-    defs.sort(key=lambda d: d[1])
-    defs.sort(key=lambda d: d[0].lower())
-
 def import_task(cur, schema, db_order, name, short_desc, info, defs):
-    _sort_words(defs)
-
     cur.execute(_insert_dictionary.format(schema), (db_order, name, short_desc, info))
 
     cur.execute(_select_dict_id.format(schema), (name, ))
