@@ -61,7 +61,7 @@ def decode(encoded):
             raise ValueError("invalid encoding")
         num = (num * 64) + cur
 
-        return num
+    return num
 
 def read_def(f, offset, size):
     f.seek(offset)
