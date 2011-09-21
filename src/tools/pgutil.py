@@ -35,6 +35,17 @@ import psycopg2
 
 _host = _port = _user = _password = _database = _schema = None
 
+_insert_dictionary = "INSERT INTO {}.dictionaries (virt_id, db_order, name, short_desc, info) " \
+                        "VALUES (NULL, %s, %s, %s, %s);"
+
+_select_dict_id = "SELECT dict_id FROM {}.dictionaries WHERE name = %s;"
+
+_prepare_insert_definition = "PREPARE insert_definition(VARCHAR(64), TEXT) AS " \
+                                "INSERT INTO {}.definitions (dict_id, word, definition) " \
+                                    "VALUES (%s, $1, $2);"
+
+_execute_insert_definition = "EXECUTE insert_definition(%s, %s);"
+
 
 def get_default_conf_path():
     return "/etc/wordbase.conf"
@@ -90,3 +101,22 @@ def process_pgsql_task(task, *args):
         conn.commit()
     finally:
         conn.close()
+
+def _sort_words(defs):
+    defs.sort(key=lambda d: d[1])
+    defs.sort(key=lambda d: d[0].lower())
+
+def import_task(cur, schema, db_order, name, short_desc, info, defs):
+    _sort_words(defs)
+
+    cur.execute(_insert_dictionary.format(schema), (db_order, name, short_desc, info))
+
+    cur.execute(_select_dict_id.format(schema), (name, ))
+    dict_id = cur.fetchone()[0]
+
+    cur.execute(_prepare_insert_definition.format(schema), (dict_id, ))
+
+    for word, definition in defs:
+        cur.execute(_execute_insert_definition, (word, definition))
+
+    print("{} definitions imported".format(len(defs)))

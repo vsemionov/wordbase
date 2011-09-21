@@ -34,36 +34,12 @@ import psycopg2
 import pgutil
 
 
-insert_dictionary = "INSERT INTO {}.dictionaries (virt_id, db_order, name, short_desc, info) " \
-                        "VALUES (NULL, %s, %s, %s, %s);"
-
-select_dict_id = "SELECT dict_id FROM {}.dictionaries WHERE name = %s;"
-
-prepare_insert_definition = "PREPARE insert_definition(VARCHAR(64), TEXT) AS " \
-                                "INSERT INTO {}.definitions (dict_id, word, definition) " \
-                                    "VALUES (%s, $1, $2);"
-
-execute_insert_definition = "EXECUTE insert_definition(%s, %s);"
-
 script_name = os.path.basename(__file__)
 
 
 def usage():
     print("Usage: {} [-f conf_file] [-o db_order] [-i info_file] name short_desc dict_file".format(script_name), file=sys.stderr)
     print("Imports a bedic dictionary into pgsql.", file=sys.stderr)
-
-def bedic2pgsql_task(cur, schema, db_order, name, short_desc, info, defs):
-    cur.execute(insert_dictionary.format(schema), (db_order, name, short_desc, info))
-
-    cur.execute(select_dict_id.format(schema), (name, ))
-    dict_id = cur.fetchone()[0]
-
-    cur.execute(prepare_insert_definition.format(schema), (dict_id, ))
-
-    for word, definition in defs:
-        cur.execute(execute_insert_definition, (word, definition))
-
-    print("{} definitions imported".format(len(defs)))
 
 
 options, (name, short_desc, dict_file) = pgutil.get_pgsql_params("o:i:", 3, 3, usage)
@@ -83,7 +59,4 @@ else:
 with open(dict_file, encoding="cp1251") as f:
     defs = [d.split('\n', 1) for d in f.read().split('\0')[1:-1]]
 
-defs.sort(key=lambda d: d[1])
-defs.sort(key=lambda d: d[0].lower())
-
-pgutil.process_pgsql_task(bedic2pgsql_task, db_order, name, short_desc, info, defs)
+pgutil.process_pgsql_task(pgutil.import_task, db_order, name, short_desc, info, defs)
