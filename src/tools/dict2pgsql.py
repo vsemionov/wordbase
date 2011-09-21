@@ -97,10 +97,9 @@ with open(index_file, encoding="utf-8") as index:
 
             if is_special(word):
                 if word == "00-database-short" and short_desc == None:
-                    definition = re.sub(r"\A(\s*00-database-short)?\s*(.*?)\s*$.*", r"\2", definition, flags=re.MULTILINE|re.DOTALL)
-                    short_desc = definition
+                    short_desc = re.sub(r"\A(\s*00-database-short)?\s*(.*?)\s*$.*\Z", r"\2", definition, flags=re.MULTILINE|re.DOTALL)
                 elif word == "00-database-info" and info == None:
-                    info = definition
+                    info = re.sub(r"\A(\s*00-database-info)?\s*^(.*?)\s*\Z", r"\2", definition, flags=re.MULTILINE|re.DOTALL)
                 elif word == "00-database-8bit-new":
                     print("8-bit encoding is not supported")
                     sys.exit(1)
