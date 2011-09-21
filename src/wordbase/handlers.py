@@ -26,6 +26,7 @@
 
 import logging
 import time
+import collections
 
 import helpmsg
 import db
@@ -193,7 +194,7 @@ def _handle_match(conn, backend, command):
         conn.write_status(551, "Invalid strategy, use \"SHOW STRAT\" for a list of strategies")
         return
 
-    dbs = {name: (virtual, short_desc) for (name, virtual, short_desc) in backend.get_databases()}
+    dbs = collections.OrderedDict([(name, (virtual, short_desc)) for (name, virtual, short_desc) in backend.get_databases()])
 
     num_matches = 0
 
@@ -257,7 +258,7 @@ def _handle_define(conn, backend, command):
 
     strat = match.get_strategy("exact")
 
-    dbs = {name: (virtual, short_desc) for (name, virtual, short_desc) in backend.get_databases()}
+    dbs = collections.OrderedDict([(name, (virtual, short_desc)) for (name, virtual, short_desc) in backend.get_databases()])
 
     db_match_defs = []
     if database in ("*", "!"):
