@@ -51,7 +51,7 @@ script_name = os.path.basename(__file__)
 
 
 def usage():
-    print("Usage: {} [-f conf_file] virt_name short_desc dict_name dict_name [...]", file=sys.stderr)
+    print("Usage: {} [-f conf_file] [-o db_order] [-i info_file] virt_name short_desc dict_name dict_name [...]", file=sys.stderr)
     print("Adds virtual dictionaries in pgsql.", file=sys.stderr)
 
 def add_vdict(cur, schema, db_order, virt_name, short_desc, info, dict_names):
