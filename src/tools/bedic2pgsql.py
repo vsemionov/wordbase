@@ -28,6 +28,7 @@
 
 import sys
 import os
+import re
 
 import psycopg2
 
@@ -56,7 +57,14 @@ if info_file is not None:
 else:
     info = None
 
+defs = []
+
+transcription = re.compile(r"^(\[[^\[\]\n]+\]) {2}", re.MULTILINE)
+
 with open(dict_file, encoding="cp1251") as f:
-    defs = [d.split('\n', 1) for d in f.read().split('\0')[1:-1]]
+    for item in f.read().split('\0')[1:-1]:
+        word, definition = item.split('\n', 1)
+        definition = transcription.sub(r"\1\n", definition)
+        defs.append((word, definition))
 
 pgutil.process_pgsql_task(pgutil.import_task, db_order, name, short_desc, info, defs)
