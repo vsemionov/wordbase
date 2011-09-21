@@ -80,7 +80,7 @@ if info_file is not None:
 else:
     info = None
 
-with open(dict_file, "r", encoding="cp1251", newline='\n') as f:
+with open(dict_file, encoding="cp1251") as f:
     defs = [d.split('\n', 1) for d in f.read().split('\0')[1:-1]]
 
 defs.sort(key=lambda d: d[1])
