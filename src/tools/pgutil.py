@@ -110,7 +110,6 @@ def import_task(cur, schema, db_order, name, short_desc, info, defs):
 
     cur.execute(_prepare_insert_definition.format(schema), (dict_id, ))
 
-    for word, definition in defs:
-        cur.execute(_execute_insert_definition, (word, definition))
+    cur.executemany(_execute_insert_definition, defs)
 
     print("{} definitions imported".format(len(defs)))

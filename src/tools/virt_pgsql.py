@@ -59,8 +59,9 @@ def add_vdict(cur, schema, db_order, virt_name, short_desc, info, dict_names):
     cur.execute(select_virt_id.format(schema), (virt_name, ))
     virt_id = cur.fetchone()[0]
     cur.execute(prepare_insert_virtual_dictionary.format(schema), (virt_id, ))
-    for dict_name in dict_names:
-        cur.execute(execute_insert_virtual_dictionary, (dict_name, ))
+
+    params = ((name, ) for name in dict_names)
+    cur.executemany(execute_insert_virtual_dictionary, params)
 
 options, args = pgutil.get_pgsql_params("o:i:", 4, None, usage)
 
