@@ -43,7 +43,7 @@ def usage():
     print("Usage: {} [-f conf_file] db_order", file=sys.stderr)
     print("Adds a search-stopping meta-dictionary marker in pgsql.", file=sys.stderr)
 
-options, (db_order, ) = pgutil.get_pgsql_params("o:i:", 1, 1, usage)
+options, (db_order, ) = pgutil.get_pgsql_params(None, 1, 1, usage)
 
 db_order = int(db_order)
 

@@ -36,7 +36,7 @@ script_name = os.path.basename(__file__)
 
 
 def usage():
-    print("Usage: {} [-f conf_file] [-o db_order] [-i info_file] name index_file dict_file".format(script_name), file=sys.stderr)
+    print("Usage: {} [-f conf_file] [-o db_order] name index_file dict_file".format(script_name), file=sys.stderr)
     print("Imports a dict dictionary into pgsql.", file=sys.stderr)
 
 def decode(encoded):
