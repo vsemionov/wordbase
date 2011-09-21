@@ -40,7 +40,7 @@ _insert_dictionary = "INSERT INTO {}.dictionaries (virt_id, db_order, name, shor
 
 _select_dict_id = "SELECT dict_id FROM {}.dictionaries WHERE name = %s;"
 
-_prepare_insert_definition = "PREPARE insert_definition(VARCHAR(64), TEXT) AS " \
+_prepare_insert_definition = "PREPARE insert_definition(VARCHAR, TEXT) AS " \
                                 "INSERT INTO {}.definitions (dict_id, word, definition) " \
                                     "VALUES (%s, $1, $2);"
 

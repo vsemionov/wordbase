@@ -39,7 +39,7 @@ insert_dictionary = "INSERT INTO {}.dictionaries (dict_id, db_order, name, short
 
 select_virt_id = "SELECT virt_id FROM {}.dictionaries WHERE name = %s;"
 
-prepare_insert_virtual_dictionary = "PREPARE insert_virtual_dictionary(VARCHAR(32)) AS " \
+prepare_insert_virtual_dictionary = "PREPARE insert_virtual_dictionary(VARCHAR) AS " \
                                         "INSERT INTO {0}.virtual_dictionaries (virt_id, dict_id) " \
                                             "VALUES (%s, (" \
                                                 "SELECT dict_id FROM {0}.dictionaries WHERE name = $1)" \
