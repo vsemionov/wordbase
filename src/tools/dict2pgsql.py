@@ -28,6 +28,7 @@
 
 import sys
 import os
+import re
 
 import psycopg2
 
@@ -69,7 +70,7 @@ def read_def(f, offset, size):
     while len(raw_def) < size:
         raw_def += f.read(size - len(raw_def))
     definition = raw_def.decode('utf-8')
-    return definition
+    return definition.replace('\r', "")
 
 def is_special(word):
     return word.startswith("00-database-")
@@ -89,26 +90,22 @@ with open(index_file, encoding="utf-8") as index:
         for entry in index:
             word, offset, size = entry.strip().split('\t')
 
-            assign = None
-
-            if is_special(word):
-                if word == "00-database-short" and short_desc == None:
-                    assign = "short_desc"
-                elif word == "00-database-info" and info == None:
-                    assign = "info"
-                elif word == "00-database-8bit-new":
-                    print("8-bit encoding is not supported")
-                    sys.exit(1)
-                else:
-                    continue
-
             offset = decode(offset)
             size = decode(size)
 
             definition = read_def(data, offset, size)
 
-            if assign:
-                globals()[assign] = definition
+            if is_special(word):
+                if word == "00-database-short" and short_desc == None:
+                    definition = re.sub(r"\A(\s*00-database-short)?\s*(.*?)\s*$.*", r"\2", definition, flags=re.MULTILINE|re.DOTALL)
+                    short_desc = definition
+                elif word == "00-database-info" and info == None:
+                    info = definition
+                elif word == "00-database-8bit-new":
+                    print("8-bit encoding is not supported")
+                    sys.exit(1)
+                else:
+                    continue
             else:
                 defs.append((word, definition))
 
