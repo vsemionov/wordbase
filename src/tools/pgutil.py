@@ -102,7 +102,7 @@ def process_pgsql_task(task, *args):
     finally:
         conn.close()
 
-def import_task(cur, schema, db_order, name, short_desc, info, defs):
+def import_task(cur, schema, db_order, name, short_desc, info, defs, quiet=False):
     cur.execute(_insert_dictionary.format(schema), (db_order, name, short_desc, info))
 
     cur.execute(_select_dict_id.format(schema), (name, ))
@@ -112,4 +112,5 @@ def import_task(cur, schema, db_order, name, short_desc, info, defs):
 
     cur.executemany(_execute_insert_definition, defs)
 
-    print("{} definitions imported".format(len(defs)))
+    if not quiet:
+        print("{} definitions imported".format(len(defs)))
