@@ -29,8 +29,6 @@
 import sys
 import os
 
-import psycopg2
-
 import pgutil
 
 

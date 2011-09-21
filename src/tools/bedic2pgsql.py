@@ -30,8 +30,6 @@ import sys
 import os
 import re
 
-import psycopg2
-
 import pgutil
 
 
