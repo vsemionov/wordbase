@@ -1,6 +1,6 @@
 0.2:
-- threadpool mp module
-
-0.3:
 - modular caching of raw and preprocessed word lists
 - redis caching module
+
+0.3:
+- threadpool mp module?
