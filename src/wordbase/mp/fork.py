@@ -63,13 +63,13 @@ def configure(config):
 
 def process(task, sock, *args):
     global _children, _max_children
-
-    overload_logged = False
-    while len(_children) >= _max_children:
-        if not overload_logged:
-            logger.warning("max-clients limit exceeded; waiting for a child to terminate")
-            overload_logged = True
-        time.sleep(1)
+    if _max_children:
+        overload_logged = False
+        while len(_children) >= _max_children:
+            if not overload_logged:
+                logger.warning("max-clients limit exceeded; waiting for a child to terminate")
+                overload_logged = True
+            time.sleep(1)
 
     pid = os.fork()
     if pid == 0:
