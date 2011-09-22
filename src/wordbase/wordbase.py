@@ -39,7 +39,7 @@ import debug
 
 
 PROGRAM_NAME = "wordbase"
-PROGRAM_VERSION = "0.2"
+PROGRAM_VERSION = "0.1.1"
 
 
 script_name = os.path.basename(__file__)
