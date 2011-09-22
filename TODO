@@ -2,8 +2,5 @@
 - threadpool mp module
 
 0.3:
-- pgsql connection pooling
-
-0.4:
 - modular caching of raw and preprocessed word lists
 - redis caching module
