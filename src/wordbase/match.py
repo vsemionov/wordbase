@@ -49,9 +49,9 @@ _default_strategy = "prefix"
 
 def get_strategy(name=None):
     def find_matches(word, samples):
-        word = _preprocess(word)
         def test_sample(sample):
             return test(word, _preprocess(sample))
+        word = _preprocess(word)
         matches = filter(test_sample, samples)
         return list(matches)
 
