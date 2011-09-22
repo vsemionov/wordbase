@@ -34,6 +34,8 @@ start_evt = threading.Event()
 
 logger = logging.getLogger(__name__)
 
+is_threaded = True
+is_subproc = False
 
 Lock = threading.Lock
 

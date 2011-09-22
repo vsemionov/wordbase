@@ -38,6 +38,9 @@ _max_children = 0
 
 logger = logging.getLogger(__name__)
 
+is_threaded = False
+is_subproc = True
+
 Lock = mp.DummyLock
 
 

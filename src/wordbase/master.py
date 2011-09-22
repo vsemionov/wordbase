@@ -44,15 +44,15 @@ def _sigterm_handler(signum, frame):
     sys.exit()
 
 def _accept_connections(sock, timeout, mp):
-    prevent_eintr = hasattr(signal, "siginterrupt") and hasattr(signal, "SIGCHLD")
+    suppress_eintr = mp.is_subproc and hasattr(signal, "siginterrupt") and hasattr(signal, "SIGCHLD")
 
     logger.info("waiting for connections")
 
     while True:
         try:
-            if prevent_eintr: signal.siginterrupt(signal.SIGCHLD, True)
+            if suppress_eintr: signal.siginterrupt(signal.SIGCHLD, True)
             conn, addr = sock.accept()
-            if prevent_eintr: signal.siginterrupt(signal.SIGCHLD, False)
+            if suppress_eintr: signal.siginterrupt(signal.SIGCHLD, False)
         except IOError as ioe:
             if ioe.errno == errno.EINTR: continue
             else: raise
