@@ -29,10 +29,12 @@ import logging
 import cache
 
 
-logger = logging.getLogger(__name__)
+logger = None
 
 
 def configure(config):
+    global logger
+    logger = logging.getLogger(__name__)
     logger.debug("initialized")
 
 

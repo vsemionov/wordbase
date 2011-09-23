@@ -28,11 +28,11 @@ import logging
 
 from pyparsing import ParserElement, Empty, Word, CharsNotIn, White, Optional, ZeroOrMore, OneOrMore, StringStart, StringEnd, Combine, Group, Suppress, nums, ParseException 
 
-import modules
 import debug
+import modules
 
 
-logger = logging.getLogger(__name__)
+logger = None
 
 CTL = ''.join(chr(i) for i in range(0, 32)) + chr(127)
 WS = " \t"
@@ -145,7 +145,7 @@ _grammar |= _command_string(_command("SASLRESP") + Optional(_text)) # not suppor
 _grammar.parseWithTabs()
 
 
-_parser_lock = modules.mp().Lock()
+_parser_lock = None
 
 
 def parse_command(line):
@@ -157,3 +157,9 @@ def parse_command(line):
         except ParseException as pe:
             logger.debug(pe)
             return False, _cmd_state
+
+def init():
+    global _parser_lock
+    _parser_lock = modules.mp().Lock()
+    global logger
+    logger = logging.getLogger(__name__)

@@ -36,7 +36,7 @@ import core
 
 _sock = None
 
-logger = logging.getLogger(__name__)
+logger = None
 
 
 def _sigterm_handler(signum, frame):
@@ -65,6 +65,9 @@ def _accept_connections(sock, timeout, mp):
         mp.process(core.process_session, conn, addr)
 
 def init(address, backlog):
+    global logger
+    logger = logging.getLogger(__name__)
+
     logger.info("server starting")
 
     signal.signal(signal.SIGTERM, _sigterm_handler)

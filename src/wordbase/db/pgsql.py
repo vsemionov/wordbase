@@ -31,7 +31,7 @@ import psycopg2
 import db
 
 
-logger = logging.getLogger(__name__)
+logger = None
 
 _host = ""
 _port = 0
@@ -50,6 +50,8 @@ def configure(config):
     _database = config.get("database", "wordbase")
     _schema = config.get("schema", "") or "public"
 
+    global logger
+    logger = logging.getLogger(__name__)
     logger.debug("initialized")
 
 

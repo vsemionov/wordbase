@@ -27,7 +27,7 @@
 import logging
 
 
-logger = logging.getLogger(__name__)
+logger = None
 
 _mp = None
 _db = None
@@ -57,6 +57,8 @@ def _init_module(config, mtype, defmod, *args):
     return mod
 
 def init(config):
+    global logger
+    logger = logging.getLogger(__name__)
     global _mp, _db, _cache
     _mp = _init_module(config, "mp", "thread")
     _db = _init_module(config, "db", "pgsql")

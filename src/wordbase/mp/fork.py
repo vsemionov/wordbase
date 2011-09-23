@@ -36,7 +36,7 @@ import mp
 _children = []
 _max_children = 0
 
-logger = logging.getLogger(__name__)
+logger = None
 
 is_threaded = False
 is_subproc = True
@@ -58,6 +58,9 @@ def configure(config):
     _max_children = config.getint("max-clients", 20)
 
     signal.signal(signal.SIGCHLD, _sigchld_handler)
+
+    global logger
+    logger = logging.getLogger(__name__)
 
     logger.debug("initialized")
 

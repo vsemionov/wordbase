@@ -28,13 +28,13 @@ import logging
 import time
 import collections
 
+import debug
 import helpmsg
 import db
 import match
-import debug
 
 
-logger = logging.getLogger(__name__)
+logger = None
 
 STOP_DB_NAME = "--exit--"
 
@@ -364,3 +364,5 @@ def configure(server_string, server_info):
     global _server_string, _server_info
     _server_string = server_string
     _server_info = server_info
+    global logger
+    logger = logging.getLogger(__name__)

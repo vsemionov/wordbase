@@ -31,7 +31,7 @@ import logging
 _max_threads = 0
 _guard_sem = None
 
-logger = logging.getLogger(__name__)
+logger = None
 
 is_threaded = True
 is_subproc = False
@@ -44,6 +44,8 @@ def configure(config):
     _max_threads = config.getint("max-clients", 20)
     if _max_threads:
         _guard_sem = threading.Semaphore(_max_threads)
+    global logger
+    logger = logging.getLogger(__name__)
     logger.debug("initialized")
 
 def thread_task(task, sock, *args):

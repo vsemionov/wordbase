@@ -33,9 +33,14 @@ import configparser
 import logging
 import random
 
-import log
 import daemon
+
 import debug
+import log
+import modules
+import match
+import core
+import master
 
 
 PROGRAM_NAME = "wordbase"
@@ -110,8 +115,6 @@ def drop_privs(wbconfig):
         return
 
 def start_server(wbconfig, mp):
-    import master
-
     host = wbconfig.get("host", "0.0.0.0")
     port = wbconfig.getint("port", 2628)
     backlog = wbconfig.getint("backlog", 512)
@@ -123,8 +126,6 @@ def start_server(wbconfig, mp):
     master.run(timeout, mp)
 
 def server_control(config, daemon_cmd):
-    import modules
-
     start_cmd = "start"
     stop_cmd = "stop"
     restart_cmd = "restart"
@@ -139,9 +140,6 @@ def server_control(config, daemon_cmd):
         random.seed()
 
         modules.init(config)
-
-        import match
-        import core
 
         dconfig = config["dict"]
         match.configure(dconfig)

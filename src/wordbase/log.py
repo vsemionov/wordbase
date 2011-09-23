@@ -35,7 +35,6 @@ logger = None
 def configure(conf_path):
     logging.addLevelName(TRACE, "TRACE")
     logging.config.fileConfig(conf_path)
-
     global logger
     logger = logging.getLogger(__name__)
 

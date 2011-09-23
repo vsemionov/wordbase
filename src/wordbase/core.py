@@ -36,7 +36,7 @@ import cache
 import handlers
 
 
-logger = logging.getLogger(__name__)
+logger = None
 
 _fqdn = ""
 _server_string = ""
@@ -74,6 +74,11 @@ def configure(config):
     _fqdn = socket.getfqdn()
     _server_string = config.get("server", "wordbase")
     _domain = config.get("domain", "example.com")
+
+    global logger
+    logger = logging.getLogger(__name__)
+
+    cmdparser.init()
 
     info = config.get("info", "")
     handlers.configure(_server_string, info)
