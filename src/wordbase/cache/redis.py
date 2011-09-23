@@ -42,17 +42,30 @@ def configure(config):
     global _servers, _ttl
     _ttl = config.getint("ttl", 0)
     _timeout = config.getint("timeout", 15) or None
+
     servers = config.get("servers", "")
     for server in servers.split(','):
         server = servers.strip()
         if not server:
             continue
+
         parts = server.split('@')
         if len(parts) == 1:
             password = None
         else:
             password = '@'.join(parts[:-1])
-        address = parts[-1]
+
+        database = parts[-1]
+        parts = database.split(':')
+        if len(parts) == 1:
+            db = 0
+        elif len(parts) == 2:
+            db = int(parts[1])
+        else:
+            raise ValueError("invalid redis connection string format")
+
+        address = parts[0]
+
         parts = address.split(':')
         if len(parts) == 1:
             port = 6379
@@ -61,7 +74,9 @@ def configure(config):
         else:
             raise ValueError("invalid redis connection string format")
         host = parts[0]
-        _servers.append((host, port, password))
+
+        _servers.append((host, port, db, password))
+
     if not len(_servers):
         raise ValueError("no redis connection strings specified")
 
@@ -81,16 +96,18 @@ def redis_exc(func):
 
 class Cache(cache.CacheBase):
     def __init__(self):
-        self._databases = [redis.Redis(host, port, password, _timeout) for (host, port, password) in _servers]
-        self._pipelines = [db.pipeline() for db in self._databases] if _ttl else None
+        self._databases = [redis.Redis(host, port, db, password, _timeout) for (host, port, db, password) in _servers]
+        self._pipelines = [database.pipeline() for database in self._databases] if _ttl else None
 
     @redis_exc
     def connect(self):
         try:
-            for db in self._databases:
+            for idx, db in enumerate(self._databases):
                 pool = db.connection_pool
                 conn = pool.get_connection(None)
+                conn.connect()
                 pool.release(conn)
+                logger.debug("connected to redis {}".format(idx))
         except Exception as ex:
             try:
                 self.close()
@@ -101,10 +118,11 @@ class Cache(cache.CacheBase):
     @redis_exc
     def close(self):
         first_ex = None
-        for db in self._databases:
+        for idx, db in enumerate(self._databases):
             try:
                 pool = db.connection_pool
                 pool.disconnect()
+                logger.debug("closed redis connection {}".format(idx))
             except Exception as ex:
                 if first_ex is None:
                     first_ex = ex
@@ -119,14 +137,8 @@ class Cache(cache.CacheBase):
     @redis_exc
     def get(self, key):
         db_idx = self.__class__._get_db_idx(key)
-        if not _ttl:
-            db = self._databases[db_idx]
-            value = db.get(key)
-        else:
-            pipe = self._pipelines[db_idx]
-            pipe.get(key)
-            result = pipe.execute()
-            value = result[0]
+        db = self._databases[db_idx]
+        value = db.get(key)
         return value
 
     @redis_exc
