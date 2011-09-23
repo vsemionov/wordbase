@@ -35,6 +35,10 @@ DICT_EOL = '\r\n'
 logger = None
 
 
+def init():
+    global logger
+    logger = logging.getLogger(__name__)
+
 def net_exc(func):
     def wrap_net_exc(*args, **kwargs):
         try:
@@ -46,8 +50,6 @@ def net_exc(func):
 
 class Connection:
     def __init__(self, sock):
-        global logger
-        logger = logging.getLogger(__name__)
         self._sio = sock.makefile(mode="rw", encoding="utf-8", newline='')
 
     @net_exc

@@ -77,6 +77,7 @@ def configure(config):
     global logger
     logger = logging.getLogger(__name__)
 
+    net.init()
     cmdparser.init()
 
     info = config.get("info", "")
