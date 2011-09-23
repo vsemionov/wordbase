@@ -65,7 +65,7 @@ def _session(conn):
         conn.write_status(420, "Server temporarily unavailable")
     except (IOError, EOFError, UnicodeDecodeError, BufferError):
         pass
-    except Exception as ex:
+    except Exception:
         logger.exception("unexpected error")
 
 def configure(config):
