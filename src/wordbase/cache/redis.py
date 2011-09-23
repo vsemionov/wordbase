@@ -26,6 +26,8 @@
 
 import logging
 
+import redis
+
 import cache
 
 
@@ -44,7 +46,7 @@ def configure(config):
     for server in servers.split(','):
         server = servers.strip()
         if not server:
-            raise ValueError("invalid redis connection string format")
+            continue
         parts = server.split('@')
         if len(parts) == 1:
             password = None
@@ -59,22 +61,81 @@ def configure(config):
         else:
             raise ValueError("invalid redis connection string format")
         host = parts[0]
-        servers.append((host, port, password))
+        _servers.append((host, port, password))
+    if not len(_servers):
+        raise ValueError("no redis connection strings specified")
 
     global logger
     logger = logging.getLogger(__name__)
     logger.debug("initialized")
 
 
+def redis_exc(func):
+    def wrap_redis_exc(*args):
+        try:
+            return func(*args)
+        except redis.RedisError as ex:
+            raise cache.CacheError(ex)
+    return wrap_redis_exc
+
 class Cache(cache.CacheBase):
+    def __init__(self):
+        self._databases = [redis.Redis(host, port, password, _timeout) for (host, port, password) in _servers]
+        self._pipelines = [db.pipeline() for db in self._databases] if _ttl else None
+
+    @redis_exc
     def connect(self):
-        pass
+        try:
+            for db in self._databases:
+                pool = db.connection_pool
+                conn = pool.get_connection(None)
+                pool.release(conn)
+        except Exception as ex:
+            try:
+                self.close()
+            except Exception:
+                pass
+            raise ex
 
+    @redis_exc
     def close(self):
-        pass
+        first_ex = None
+        for db in self._databases:
+            try:
+                pool = db.connection_pool
+                pool.disconnect()
+            except Exception as ex:
+                if first_ex is None:
+                    first_ex = ex
+        if first_ex is not None:
+            raise first_ex
 
+    @staticmethod
+    def _get_db_idx(key):
+        db_idx = hash(key) % len(_servers)
+        return db_idx
+
+    @redis_exc
     def get(self, key):
-        return None
+        db_idx = self.__class__._get_db_idx(key)
+        if not _ttl:
+            db = self._databases[db_idx]
+            value = db.get(key)
+        else:
+            pipe = self._pipelines[db_idx]
+            pipe.get(key)
+            result = pipe.execute()
+            value = result[0]
+        return value
 
+    @redis_exc
     def set(self, key, value):
-        pass
+        db_idx = self.__class__._get_db_idx(key)
+        if not _ttl:
+            db = self._databases[db_idx]
+            db.set(key, value)
+        else:
+            pipe = self._pipelines[db_idx]
+            pipe.set(key, value)
+            pipe.expire(key, _ttl)
+            pipe.execute()
