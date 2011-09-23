@@ -81,7 +81,7 @@ def _handle_help(conn, *args):
 def _handle_status(conn, *args):
     conn.write_status(210, "up")
 
-def _handle_client(conn, backend, command):
+def _handle_client(conn, backend, cacher, command):
     logger.info("client: %s", command[1])
     conn.write_status(250, "ok")
 
@@ -149,7 +149,7 @@ def _show_server(conn):
     conn.write_text_end()
     conn.write_status(250, "ok")
 
-def _handle_show(conn, backend, command):
+def _handle_show(conn, backend, cacher, command):
     param = command[1]
     if param in ["DB", "DATABASES"]:
         _show_db(conn, backend)
@@ -163,7 +163,7 @@ def _handle_show(conn, backend, command):
     else:
         assert False, "unhandled SHOW command"
 
-def _find_matches(conn, backend, dbs, database, strategy, word, defs):
+def _find_matches(conn, backend, cacher, dbs, database, strategy, word, defs):
     def get_matches(db_name):
         def add_matches(db_name):
             words = backend.get_words(db_name)
@@ -225,13 +225,13 @@ def _get_dbs(backend):
     return dbs
 
 @handle_550
-def _handle_match(conn, backend, command):
+def _handle_match(conn, backend, cacher, command):
     database = command[1]
     strategy = command[2]
     word = command[3]
 
     dbs = _get_dbs(backend)
-    db_matches, num_matches = _find_matches(conn, backend, dbs, database, strategy, word, False)
+    db_matches, num_matches = _find_matches(conn, backend, cacher, dbs, database, strategy, word, False)
 
     if not num_matches:
         conn.write_status(552, "No match")
@@ -248,12 +248,12 @@ def _handle_match(conn, backend, command):
     conn.write_status(250, "ok")
 
 @handle_550
-def _handle_define(conn, backend, command):
+def _handle_define(conn, backend, cacher, command):
     database = command[1]
     word = command[2]
 
     dbs = _get_dbs(backend)
-    db_match_defs, num_matches = _find_matches(conn, backend, dbs, database, "exact", word, True)
+    db_match_defs, num_matches = _find_matches(conn, backend, cacher, dbs, database, "exact", word, True)
     del num_matches
 
     num_defs = 0
@@ -283,18 +283,18 @@ def _handle_define(conn, backend, command):
 
     conn.write_status(250, "ok")
 
-def _handle_time_command(conn, backend, command):
+def _handle_time_command(conn, backend, cacher, command):
     start = time.clock()
     null_conn = debug.NullConnection()
     n = command[1]
     subcmd = command[2]
     for i in range(n):
         del i
-        handle_command(null_conn, backend, subcmd)
+        handle_command(null_conn, backend, cacher, subcmd)
     end = time.clock()
     elapsed = end - start
 
-    handle_command(conn, backend, subcmd)
+    handle_command(conn, backend, cacher, subcmd)
 
     conn.write_status(280, "time: {:.3f} s".format(elapsed))
 
@@ -319,10 +319,10 @@ def handle_syntax_error(conn, command):
         code, msg = 501, "Syntax error, illegal parameters"
     conn.write_status(code, msg)
 
-def handle_command(conn, backend, command):
+def handle_command(conn, backend, cacher, command):
     name = command[0]
     handler = _cmd_handlers.get(name, _not_implemented)
-    return handler(conn, backend, command)
+    return handler(conn, backend, cacher, command)
 
 def configure(server_string, server_info):
     global _server_string, _server_info

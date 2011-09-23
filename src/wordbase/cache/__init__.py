@@ -24,40 +24,28 @@
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 
-import logging
+import debug
 
 
-logger = logging.getLogger(__name__)
+class CacheError(IOError):
+    pass
 
-_mp = None
-_db = None
-_cache = None
+class CacheBase:
+    def connect(self):
+        debug.not_impl(self)
 
+    def close(self):
+        debug.not_impl(self)
 
-def mp():
-    return _mp
+    def get(self, key):
+        debug.not_impl(self)
 
-def db():
-    return _db
+    def set(self, key, value):
+        debug.not_impl(self)
 
-def cache():
-    return _cache
+    def __enter__(self):
+        self.connect()
+        return self
 
-def _init_module(config, mtype, defmod, *args):
-    modules_conf = config["modules"]
-    mname = modules_conf.get(mtype, defmod)
-    mconf = config[mname] if mname != "none" else None
-    fullname = mtype + "." + mname
-
-    logger.debug("initializing module %s", fullname)
-
-    pkg = __import__(fullname)
-    mod = getattr(pkg, mname)
-    mod.configure(mconf, *args)
-    return mod
-
-def init(config):
-    global _mp, _db, _cache
-    _mp = _init_module(config, "mp", "thread")
-    _db = _init_module(config, "db", "pgsql")
-    _cache = _init_module(config, "cache", "none")
+    def __exit__(self, *args):
+        self.close()

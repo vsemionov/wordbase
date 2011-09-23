@@ -32,6 +32,7 @@ import modules
 import net
 import cmdparser
 import db
+import cache
 import handlers
 
 
@@ -49,7 +50,7 @@ def _send_banner(conn):
 
 def _session(conn):
     try:
-        with modules.db().Backend() as backend:
+        with modules.db().Backend() as backend, modules.cache().Cache() as cacher:
             _send_banner(conn)
 
             end = False
@@ -57,11 +58,11 @@ def _session(conn):
                 line = conn.read_line()
                 correct, command = cmdparser.parse_command(line)
                 if correct:
-                    end = handlers.handle_command(conn, backend, command)
+                    end = handlers.handle_command(conn, backend, cacher, command)
                 else:
                     handlers.handle_syntax_error(conn, command)
-    except db.BackendError as be:
-        logger.error(be)
+    except (db.BackendError, cache.CacheError) as ex:
+        logger.error(ex)
         conn.write_status(420, "Server temporarily unavailable")
     except (IOError, EOFError, UnicodeDecodeError, BufferError) as ex:
         logger.error(ex)
