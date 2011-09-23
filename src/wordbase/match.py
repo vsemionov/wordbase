@@ -56,7 +56,7 @@ _default_strategy = "prefix"
 
 def preprocessed(headwords):
     preprocessor = map(_preprocess, headwords)
-    return preprocessor
+    return list(preprocessor)
 
 def _filter_words(test, word, headwords, preprocessed):
     word = _preprocess(word)
@@ -71,7 +71,7 @@ def get_filter(strategy=None):
     try:
         strat = _strategies[strategy]
     except KeyError:
-        raise InvalidStrategyError()
+        raise InvalidStrategyError("invalid strategy: {}".format(strategy))
     desc, test = strat
     del desc
     word_filter = functools.partial(_filter_words, test)

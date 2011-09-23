@@ -227,7 +227,8 @@ def _find_matches(conn, backend, cacher, dbs, database, strategy, word, defs):
     strat = strategy if strategy != "." else None
     try:
         word_filter = match.get_filter(strat)
-    except match.InvalidStrategyError:
+    except match.InvalidStrategyError as ise:
+        logger.debug(ise)
         conn.write_status(551, "Invalid strategy, use \"SHOW STRAT\" for a list of strategies")
         return
 
