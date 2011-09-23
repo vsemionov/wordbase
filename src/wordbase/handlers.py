@@ -163,13 +163,17 @@ def _handle_show(conn, backend, command):
     else:
         assert False, "unhandled SHOW command"
 
-@handle_550
-def _handle_match(conn, backend, command):
+def _find_matches(conn, backend, dbs, database, strategy, word, defs):
     def get_matches(db_name):
         def add_matches(db_name):
             words = backend.get_words(db_name)
-            matches = filter_words(word, words, match.preprocessed(words))
-            ml.append((db_name, matches))
+            filtered = filter_words(word, words, match.preprocessed(words))
+            if defs:
+                matches = [(wd, []) for wd in filtered]
+            else:
+                matches = filtered
+            item = (db_name, matches)
+            ml.append(item)
             return len(matches)
 
         nmatches = 0
@@ -183,20 +187,14 @@ def _handle_match(conn, backend, command):
                 nmatches += add_matches(name)
         return nmatches, ml
 
-    database = command[1]
-    strategy = command[2]
-    word = command[3]
-
     _validate_db_name(database)
 
-    strategy_eff = strategy if strategy != "." else None
+    strat = strategy if strategy != "." else None
     try:
-        filter_words = match.get_filter(strategy_eff)
+        filter_words = match.get_filter(strat)
     except match.InvalidStrategyError:
         conn.write_status(551, "Invalid strategy, use \"SHOW STRAT\" for a list of strategies")
         return
-
-    dbs = collections.OrderedDict([(name, (virtual, short_desc)) for (name, virtual, short_desc) in backend.get_databases()])
 
     num_matches = 0
 
@@ -219,13 +217,28 @@ def _handle_match(conn, backend, command):
         db_match_defs.extend(ml)
         num_matches = nm
 
+    return db_match_defs, num_matches
+
+def _get_dbs(backend):
+    dbs = collections.OrderedDict([(name, (virtual, short_desc)) for (name, virtual, short_desc) in backend.get_databases()])
+    return dbs
+
+@handle_550
+def _handle_match(conn, backend, command):
+    database = command[1]
+    strategy = command[2]
+    word = command[3]
+
+    dbs = _get_dbs(backend)
+    db_matches, num_matches = _find_matches(conn, backend, dbs, database, strategy, word, False)
+
     if not num_matches:
         conn.write_status(552, "No match")
         return
 
     conn.write_status(152, "{} matches found - text follows".format(num_matches))
 
-    for name, matches in db_match_defs:
+    for name, matches in db_matches:
         for m in matches:
             escaped_match = _escaped(m)
             conn.write_line("{} \"{}\"".format(name, escaped_match))
@@ -235,50 +248,12 @@ def _handle_match(conn, backend, command):
 
 @handle_550
 def _handle_define(conn, backend, command):
-    def get_matches(db_name):
-        def add_matches(db_name):
-            words = backend.get_words(db_name)
-            filtered = filter_words(word, words, match.preprocessed(words))
-            matches = [(wd, []) for wd in filtered]
-            ml.append((db_name, matches))
-            return len(matches)
-
-        nmatches = 0
-        ml = []
-        virtual, short_desc = dbs[db_name]
-        del short_desc
-        if not virtual:
-            nmatches += add_matches(db_name)
-        else:
-            for name in backend.get_virtual_database(db_name):
-                nmatches += add_matches(name)
-        return nmatches, ml
-
     database = command[1]
     word = command[2]
 
-    _validate_db_name(database)
-
-    filter_words = match.get_filter("exact")
-
-    dbs = collections.OrderedDict([(name, (virtual, short_desc)) for (name, virtual, short_desc) in backend.get_databases()])
-
-    db_match_defs = []
-    if database in ("*", "!"):
-        for name, (virtual, short_desc) in dbs.items():
-            if virtual:
-                continue
-            if name == STOP_DB_NAME:
-                break
-            nm, ml = get_matches(name)
-            assert len(ml) == 1, "virtual database detected"
-            db_match_defs.extend(ml)
-            if database == "!":
-                if nm:
-                    break
-    else:
-        nm, ml = get_matches(database)
-        db_match_defs.extend(ml)
+    dbs = _get_dbs(backend)
+    db_match_defs, num_matches = _find_matches(conn, backend, dbs, database, "exact", word, True)
+    del num_matches
 
     num_defs = 0
 
@@ -296,6 +271,7 @@ def _handle_define(conn, backend, command):
 
     for name, matches in db_match_defs:
         virtual, short_desc = dbs[name]
+        del virtual
         escaped_short_desc = _escaped(short_desc)
         for wd, defs in matches:
             escaped_word = _escaped(wd)
@@ -312,8 +288,8 @@ def _handle_time_command(conn, backend, command):
     n = command[1]
     subcmd = command[2]
     for i in range(n):
+        del i
         handle_command(null_conn, backend, subcmd)
-    if n: del i
     end = time.clock()
     elapsed = end - start
 
