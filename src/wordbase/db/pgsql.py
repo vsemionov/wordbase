@@ -29,6 +29,7 @@ import logging
 
 import psycopg2
 
+import debug
 import db
 
 
@@ -64,8 +65,8 @@ def pg_exc(func):
         try:
             return func(*args)
         except (psycopg2.Error, psycopg2.Warning) as ex:
-            logger.error(ex)
-            logger.debug(ex, exc_info=sys.exc_info())
+            exc_info = sys.exc_info() if debug.enabled else None
+            logger.error(ex, exc_info=exc_info)
             raise db.BackendError(ex)
     return wrap_pg_exc
 

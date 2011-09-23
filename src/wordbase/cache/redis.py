@@ -29,6 +29,7 @@ import logging
 
 import redis
 
+import debug
 import cache
 
 
@@ -91,8 +92,8 @@ def redis_exc(func):
         try:
             return func(*args)
         except redis.RedisError as ex:
-            logger.error(ex)
-            logger.debug(ex, exc_info=sys.exc_info())
+            exc_info = sys.exc_info() if debug.enabled else None
+            logger.error(ex, exc_info=exc_info)
             raise cache.CacheError(ex)
     return wrap_redis_exc
 
