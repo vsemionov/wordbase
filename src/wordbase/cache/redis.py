@@ -24,6 +24,7 @@
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 
+import sys
 import logging
 
 import redis
@@ -91,12 +92,13 @@ def redis_exc(func):
             return func(*args)
         except redis.RedisError as ex:
             logger.error(ex)
+            logger.debug(ex, exc_info=sys.exc_info())
             raise cache.CacheError(ex)
     return wrap_redis_exc
 
 class Cache(cache.CacheBase):
     def __init__(self):
-        self._databases = [redis.Redis(host, port, db, password, _timeout) for (host, port, db, password) in _servers]
+        self._databases = [redis.Redis(host=host, port=port, db=db, password=password, socket_timeout=_timeout) for (host, port, db, password) in _servers]
         self._pipelines = [database.pipeline() for database in self._databases] if _ttl else None
 
     @redis_exc

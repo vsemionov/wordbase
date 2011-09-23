@@ -24,6 +24,7 @@
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 
+import sys
 import io
 import logging
 
@@ -44,6 +45,7 @@ def net_exc(func):
         try:
             return func(*args, **kwargs)
         except Exception as ex:
+            logger.debug(ex, exc_info=sys.exc_info())
             logger.error(ex)
             raise ex
     return wrap_net_exc

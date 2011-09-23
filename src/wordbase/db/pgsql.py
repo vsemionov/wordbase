@@ -24,6 +24,7 @@
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 
+import sys
 import logging
 
 import psycopg2
@@ -64,6 +65,7 @@ def pg_exc(func):
             return func(*args)
         except (psycopg2.Error, psycopg2.Warning) as ex:
             logger.error(ex)
+            logger.debug(ex, exc_info=sys.exc_info())
             raise db.BackendError(ex)
     return wrap_pg_exc
 
