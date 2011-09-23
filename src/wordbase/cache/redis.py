@@ -31,8 +31,34 @@ import cache
 
 logger = None
 
+_servers = []
+_ttl = 0
+
 
 def configure(config):
+    global _servers, _ttl
+    _ttl = config.getint("ttl", 0)
+    servers = config.get("servers", "")
+    for server in servers.split(','):
+        server = servers.strip()
+        if not server:
+            raise ValueError("invalid redis connection string format")
+        parts = server.split('@')
+        if len(parts) == 1:
+            password = None
+        else:
+            password = '@'.join(parts[:-1])
+        address = parts[-1]
+        parts = address.split(':')
+        if len(parts) == 1:
+            port = 6379
+        elif len(parts) == 2:
+            port = int(parts[1])
+        else:
+            raise ValueError("invalid redis connection string format")
+        host = parts[0]
+        servers.append((host, port, password))
+
     global logger
     logger = logging.getLogger(__name__)
     logger.debug("initialized")
