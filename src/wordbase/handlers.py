@@ -168,7 +168,7 @@ def _handle_match(conn, backend, command):
     def get_matches(db_name):
         def add_matches(db_name):
             words = backend.get_words(db_name)
-            matches = filter_words(word, words)
+            matches = filter_words(word, words, match.preprocessed(words))
             ml.append((db_name, matches))
             return len(matches)
 
@@ -238,7 +238,7 @@ def _handle_define(conn, backend, command):
     def get_matches(db_name):
         def add_matches(db_name):
             words = backend.get_words(db_name)
-            filtered = filter_words(word, words)
+            filtered = filter_words(word, words, match.preprocessed(words))
             matches = [(wd, []) for wd in filtered]
             ml.append((db_name, matches))
             return len(matches)

@@ -54,11 +54,14 @@ _strategies = collections.OrderedDict((
 _default_strategy = "prefix"
 
 
-def _filter_words(test, word, headwords):
+def preprocessed(headwords):
+    preprocessor = map(_preprocess, headwords)
+    return list(preprocessor)
+
+def _filter_words(test, word, headwords, preprocessed):
     word = _preprocess(word)
-    match = functools.partial(test, word)
-    preprocessed = map(_preprocess, headwords)
-    selectors = map(match, preprocessed)
+    matcher = functools.partial(test, word)
+    selectors = map(matcher, preprocessed)
     matches = itertools.compress(headwords, selectors)
     return list(matches)
 
