@@ -118,7 +118,7 @@ def start_server(wbconfig, mp):
     host = wbconfig.get("host", "0.0.0.0")
     port = wbconfig.getint("port", 2628)
     backlog = wbconfig.getint("backlog", 512)
-    timeout = wbconfig.getint("timeout", 60)
+    timeout = wbconfig.getint("timeout", 60) or None
     address = (host, port)
 
     master.init(address, backlog)

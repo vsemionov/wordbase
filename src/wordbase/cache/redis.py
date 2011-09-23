@@ -32,12 +32,14 @@ import cache
 logger = None
 
 _servers = []
+_timeout = 0
 _ttl = 0
 
 
 def configure(config):
     global _servers, _ttl
     _ttl = config.getint("ttl", 0)
+    _timeout = config.getint("timeout", 15) or None
     servers = config.get("servers", "")
     for server in servers.split(','):
         server = servers.strip()
