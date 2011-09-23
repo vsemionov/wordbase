@@ -91,3 +91,4 @@ def process_session(sock, addr):
             _session(conn)
         finally:
             logger.info("session ended")
+            logger.debug("closing client connection")
