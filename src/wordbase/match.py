@@ -27,6 +27,7 @@
 import string
 import collections
 import functools
+import itertools
 
 
 class InvalidStrategyError(ValueError):
@@ -39,11 +40,11 @@ _no_punctuation = {ord(c): None for c in string.punctuation}
 def _preprocess(word):
     return ' '.join(word.translate(_no_punctuation).split()).lower()
 
-def _match_exact(word, sample):
-    return word == sample
+def _match_exact(word, headword):
+    return headword == word
 
-def _match_prefix(word, sample):
-    return sample.startswith(word)
+def _match_prefix(word, headword):
+    return headword.startswith(word)
 
 _strategies = collections.OrderedDict((
                                        ("exact", ("Match headwords exactly", _match_exact)),
@@ -53,11 +54,12 @@ _strategies = collections.OrderedDict((
 _default_strategy = "prefix"
 
 
-def _filter_words(test, headword, samples):
-    match = functools.partial(test, headword)
-    headword = _preprocess(headword)
-    preprocessed = map(_preprocess, samples)
-    matches = filter(match, preprocessed)
+def _filter_words(test, word, headwords):
+    word = _preprocess(word)
+    match = functools.partial(test, word)
+    preprocessed = map(_preprocess, headwords)
+    selectors = map(match, preprocessed)
+    matches = itertools.compress(headwords, selectors)
     return list(matches)
 
 def get_filter(strategy=None):
