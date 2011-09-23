@@ -56,7 +56,7 @@ _default_strategy = "prefix"
 
 def preprocessed(headwords):
     preprocessor = map(_preprocess, headwords)
-    return list(preprocessor)
+    return preprocessor
 
 def _filter_words(test, word, headwords, preprocessed):
     word = _preprocess(word)
