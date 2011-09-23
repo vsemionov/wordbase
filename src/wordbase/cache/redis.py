@@ -75,6 +75,7 @@ def redis_exc(func):
         try:
             return func(*args)
         except redis.RedisError as ex:
+            logger.error(ex)
             raise cache.CacheError(ex)
     return wrap_redis_exc
 

@@ -25,17 +25,32 @@
 
 
 import io
+import logging
 
 import log
 
 
 DICT_EOL = '\r\n'
 
+logger = None
+
+
+def net_exc(func):
+    def wrap_net_exc(*args, **kwargs):
+        try:
+            return func(*args, **kwargs)
+        except Exception as ex:
+            logger.error(ex)
+            raise ex
+    return wrap_net_exc
 
 class Connection:
     def __init__(self, sock):
+        global logger
+        logger = logging.getLogger(__name__)
         self._sio = sock.makefile(mode="rw", encoding="utf-8", newline='')
 
+    @net_exc
     def read_line(self):
         """reads a line of input
         
@@ -86,6 +101,7 @@ class Connection:
         self._sio.flush()
         log.trace_server(line)
 
+    @net_exc
     def write_line(self, line, split=True):
         """writes a line of output
         
@@ -101,18 +117,22 @@ class Connection:
         else:
             self._write(self.__class__._trunc_line(line))
 
+    @net_exc
     def write_status(self, code, message):
         line = "{:03d} {:s}".format(code, message)
         self.write_line(line, split=False)
 
+    @net_exc
     def write_text_end(self):
         self._write('.')
 
+    @net_exc
     def write_text(self, lines):
         for line in lines:
             self.write_line(line)
         self.write_text_end()
 
+    @net_exc
     def close(self):
         self._sio.close()
 

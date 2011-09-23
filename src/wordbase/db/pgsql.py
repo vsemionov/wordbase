@@ -63,6 +63,7 @@ def pg_exc(func):
         try:
             return func(*args)
         except (psycopg2.Error, psycopg2.Warning) as ex:
+            logger.error(ex)
             raise db.BackendError(ex)
     return wrap_pg_exc
 
