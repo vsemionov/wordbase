@@ -167,7 +167,8 @@ def _handle_show(conn, backend, command):
 def _handle_match(conn, backend, command):
     def get_matches(db_name):
         def add_matches(db_name):
-            matches = strat(word, backend.get_words(db_name))
+            words = backend.get_words(db_name)
+            matches = filter_words(word, words)
             ml.append((db_name, matches))
             return len(matches)
 
@@ -189,8 +190,9 @@ def _handle_match(conn, backend, command):
     _validate_db_name(database)
 
     strategy_eff = strategy if strategy != "." else None
-    strat = match.get_strategy(strategy_eff)
-    if strat is None:
+    try:
+        filter_words = match.get_filter(strategy_eff)
+    except match.InvalidStrategyError:
         conn.write_status(551, "Invalid strategy, use \"SHOW STRAT\" for a list of strategies")
         return
 
@@ -235,8 +237,9 @@ def _handle_match(conn, backend, command):
 def _handle_define(conn, backend, command):
     def get_matches(db_name):
         def add_matches(db_name):
-            words = strat(word, backend.get_words(db_name))
-            matches = [(wd, []) for wd in words]
+            words = backend.get_words(db_name)
+            filtered = filter_words(word, words)
+            matches = [(wd, []) for wd in filtered]
             ml.append((db_name, matches))
             return len(matches)
 
@@ -256,7 +259,7 @@ def _handle_define(conn, backend, command):
 
     _validate_db_name(database)
 
-    strat = match.get_strategy("exact")
+    filter_words = match.get_filter("exact")
 
     dbs = collections.OrderedDict([(name, (virtual, short_desc)) for (name, virtual, short_desc) in backend.get_databases()])
 

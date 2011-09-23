@@ -26,9 +26,15 @@
 
 import string
 import collections
+import functools
+
+
+class InvalidStrategyError(ValueError):
+    pass
 
 
 _no_punctuation = {ord(c): None for c in string.punctuation}
+
 
 def _preprocess(word):
     return ' '.join(word.translate(_no_punctuation).split()).lower()
@@ -47,24 +53,24 @@ _strategies = collections.OrderedDict((
 _default_strategy = "prefix"
 
 
-def get_strategy(name=None):
-    def find_matches(word, samples):
-        def test_sample(sample):
-            return test(word, _preprocess(sample))
-        word = _preprocess(word)
-        matches = filter(test_sample, samples)
-        return list(matches)
+def _filter_words(test, headword, samples):
+    match = functools.partial(test, headword)
+    headword = _preprocess(headword)
+    preprocessed = map(_preprocess, samples)
+    matches = filter(match, preprocessed)
+    return list(matches)
 
-    if name is None:
-        name = _default_strategy
-
-    strat = _strategies.get(name)
-    if strat is None:
-        return None
+def get_filter(strategy=None):
+    if strategy is None:
+        strategy = _default_strategy
+    try:
+        strat = _strategies[strategy]
+    except KeyError:
+        raise InvalidStrategyError()
     desc, test = strat
     del desc
-
-    return find_matches
+    word_filter = functools.partial(_filter_words, test)
+    return word_filter
 
 def get_strategies():
     func = None
