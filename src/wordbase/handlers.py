@@ -201,6 +201,7 @@ def _find_matches(conn, backend, dbs, database, strategy, word, defs):
     db_match_defs = []
     if database in ("*", "!"):
         for name, (virtual, short_desc) in dbs.items():
+            del short_desc
             if virtual:
                 continue
             if name == STOP_DB_NAME:
