@@ -224,11 +224,10 @@ except KeyboardInterrupt:
 except Exception as ex:
     err_msg = "{}: {}".format(ex.__class__.__name__, ex)
     log_msg = "terminating on unhandled exception"
+    exc_info = sys.exc_info() if debug.enabled else None
     if logger:
-        logger.critical(log_msg, exc_info=sys.exc_info())
-        print(err_msg, file=sys.stderr)
-    elif debug.enabled:
-        logging.critical(log_msg, exc_info=sys.exc_info())
+        logger.critical(log_msg, exc_info=exc_info)
     else:
-        print(err_msg, file=sys.stderr)
+        logging.critical(log_msg, exc_info=exc_info)
+    print(err_msg, file=sys.stderr)
     sys.exit(1)
