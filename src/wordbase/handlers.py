@@ -163,11 +163,46 @@ def _handle_show(conn, backend, cacher, command):
     else:
         assert False, "unhandled SHOW command"
 
+def _retrieve_words(backend, cacher, db_name):
+    def parse_list(data):
+        items = data.splitlines()
+        return items
+
+    def format_list(items):
+        mangle = len(items) > 0 and len(items[-1]) == 0
+        if mangle:
+            items.append("")
+        formatted = '\n'.join(items)
+        if mangle:
+            del items[-1]
+        return formatted
+
+    words_name = "words:{}".format(db_name)
+    preproc_name = "preproc:{}".format(db_name)
+
+    words_cache = cacher.get(words_name)
+    if words_cache is not None:
+        words = parse_list(words_cache)
+    else:
+        words = backend.get_words(db_name)
+        formatted = format_list(words)
+        cacher.set(words_name, formatted)
+
+    preproc_cache = cacher.get(preproc_name)
+    if preproc_cache is not None:
+        preprocessed = parse_list(preproc_cache)
+    else:
+        preprocessed = match.preprocessed(words)
+        formatted = format_list(preprocessed)
+        cacher.set(preproc_name, formatted)
+
+    return words, preprocessed
+
 def _find_matches(conn, backend, cacher, dbs, database, strategy, word, defs):
     def get_matches(db_name):
         def add_matches(db_name):
-            words = backend.get_words(db_name)
-            filtered = filter_words(word, words, match.preprocessed(words))
+            words, preprocessed = _retrieve_words(backend, cacher, db_name)
+            filtered = word_filter(word, words, preprocessed)
             if defs:
                 matches = [(wd, []) for wd in filtered]
             else:
@@ -191,7 +226,7 @@ def _find_matches(conn, backend, cacher, dbs, database, strategy, word, defs):
 
     strat = strategy if strategy != "." else None
     try:
-        filter_words = match.get_filter(strat)
+        word_filter = match.get_filter(strat)
     except match.InvalidStrategyError:
         conn.write_status(551, "Invalid strategy, use \"SHOW STRAT\" for a list of strategies")
         return
