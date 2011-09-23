@@ -34,7 +34,7 @@ DICT_EOL = '\r\n'
 
 class Connection:
     def __init__(self, sock):
-        self._sio = sock.makefile(mode="rw", encoding="utf-8", newline=DICT_EOL)
+        self._sio = sock.makefile(mode="rw", encoding="utf-8", newline='')
 
     def read_line(self):
         """reads a line of input
