@@ -40,7 +40,7 @@ _ttl = 0
 
 
 def configure(config):
-    global _servers, _ttl
+    global _servers, _ttl, _timeout
     _ttl = config.getint("ttl", 0)
     _timeout = config.getint("timeout", 15) or None
 
