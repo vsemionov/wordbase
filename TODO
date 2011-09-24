@@ -1,6 +1,9 @@
-0.2:
-- modular caching of raw and preprocessed word lists
-- redis caching module
+0.2.1:
+- fix segfault when a thread attempts to fetch data from redis after another thread previously failed to connect to redis; to reproduce, configure wordbase with thread mp module, stop redis, start wordbase, connect a client (which fails), start redis, connect a second client and issue "d hello"; result - the python interpreter segfaults
 
 0.3:
+- pgsql on-demand connections and connection pooling
+- redis on-demand connections and connection pooling
+
+0.4:
 - threadpool mp module?
