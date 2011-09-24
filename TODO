@@ -2,11 +2,11 @@
 - fix segfault when a thread attempts to fetch data from redis after another thread previously failed to connect to redis; to reproduce, configure wordbase with thread mp module, stop redis, start wordbase, connect a client (which fails), start redis, connect a second client and issue "d hello"; result - the python interpreter segfaults
 
 0.3:
-- replace psycopg2 with pg8000?
+- replace psycopg2 with pg8000 and enable socket timeout?
 
 0.4:
-- pgsql on-demand connections and connection pooling
 - redis on-demand connections and connection pooling
+- some sort of failover after a redis server fails and fallback after recovery; if all servers fail, the cache should fail silently (without disconnecting the client)
 
 0.5:
-- threadpool mp module?
+- threadpool mp module? the threads in the pool should have all necessary resources (db connections) preallocated in order to avoid the overhead of allocating them when the client connects
