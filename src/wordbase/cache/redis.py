@@ -41,9 +41,7 @@ _ttl = 0
 
 
 def configure(config):
-    global _servers, _ttl, _timeout
-    _ttl = config.getint("ttl", 0)
-    _timeout = config.getint("timeout", 15) or None
+    global _servers, _timeout, _ttl
 
     servers = config.get("servers", "")
     for server in servers.split(','):
@@ -81,6 +79,9 @@ def configure(config):
 
     if not len(_servers):
         raise ValueError("no redis connection strings specified")
+
+    _timeout = config.getint("timeout", 15) or None
+    _ttl = config.getint("ttl", 0)
 
     global logger
     logger = logging.getLogger(__name__)
