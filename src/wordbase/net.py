@@ -45,7 +45,7 @@ def net_exc(func):
     def wrap_net_exc(*args, **kwargs):
         try:
             return func(*args, **kwargs)
-        except Exception as ex:
+        except (IOError, EOFError, UnicodeDecodeError, BufferError) as ex:
             exc_info = sys.exc_info() if debug.enabled else None
             logger.error(ex, exc_info=exc_info)
             raise ex

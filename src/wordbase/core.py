@@ -61,10 +61,10 @@ def _session(conn):
                     end = handlers.handle_command(conn, backend, cacher, command)
                 else:
                     handlers.handle_syntax_error(conn, command)
-    except (db.BackendError, cache.CacheError):
-        conn.write_status(420, "Server temporarily unavailable")
     except (IOError, EOFError, UnicodeDecodeError, BufferError):
         pass
+    except (db.BackendError, cache.CacheError):
+        conn.write_status(420, "Server temporarily unavailable")
     except Exception:
         logger.exception("unexpected error")
 
