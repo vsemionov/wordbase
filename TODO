@@ -1,7 +1,6 @@
 0.3:
 - redis on-demand connections
 - pgsql on-demand connections
-- replace psycopg2 with pg8000 and enable socket timeout?
 
 0.3.1
 - correct ttl when key already present in redis
