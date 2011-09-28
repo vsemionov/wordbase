@@ -37,6 +37,10 @@ DICT_EOL = '\r\n'
 logger = None
 
 
+class NetworkError(IOError):
+    pass
+
+
 def init():
     global logger
     logger = logging.getLogger(__name__)
@@ -48,7 +52,7 @@ def net_exc(func):
         except (IOError, EOFError, UnicodeDecodeError, BufferError) as ex:
             exc_info = sys.exc_info() if debug.enabled else None
             logger.error(ex, exc_info=exc_info)
-            raise ex
+            raise NetworkError(ex)
     return wrap_net_exc
 
 class Connection:
