@@ -2,19 +2,16 @@
 - (?) some sort of failover after a redis server fails and fallback after recovery; if all servers fail, the cache should fail silently (without disconnecting the client)
 
 0.5:
-- (?) threadpool mp module; the threads in the pool should have all necessary resources (db connections) preallocated in order to avoid the overhead of allocating them when the client connects
-
-0.6:
 - memcached cache module
 
-0.7:
+0.6:
 - mysql db module
 
-0.8:
+0.7:
 - dict/dictzip db module; see http://www.koders.com/python/fidCE921450E1A2FDA0629539F9A8DC7A25AECDD126.aspx?s=wxpython
 
-0.9:
+0.8:
 - windows service support
 
-1.0:
+0.9:
 - documentation
