@@ -70,18 +70,28 @@ def pg_exc(func):
             raise db.BackendError(ex)
     return wrap_pg_exc
 
+def pg_conn(func):
+    def wrap_pg_conn(self, *args):
+        if self._cur is None:
+            self._connect_real()
+        return func(self, *args)
+    return wrap_pg_conn
+
 class Backend(db.BackendBase):
     def __init__(self):
         self._conn = None
         self._cur = None
 
-    @pg_exc
-    def connect(self):
+    def _connect_real(self):
         self.close()
         self._conn = psycopg2.connect(host=_host, port=_port, user=_user, password=_password, database=_database)
         self._conn.autocommit = True
         self._cur = self._conn.cursor()
         logger.debug("connected to pgsql")
+
+    @pg_exc
+    def connect(self):
+        pass
 
     @pg_exc
     def close(self):
@@ -94,6 +104,7 @@ class Backend(db.BackendBase):
             logger.debug("closed the pgsql connection")
 
     @pg_exc
+    @pg_conn
     def get_databases(self):
         cur = self._cur
         stmt = "SELECT name, (virt_id IS NOT NULL) AS virtual, short_desc FROM {}.dictionaries ORDER BY db_order;".format(_schema)
@@ -102,6 +113,7 @@ class Backend(db.BackendBase):
         return rs
 
     @pg_exc
+    @pg_conn
     def get_database_info(self, database):
         cur = self._cur
         stmt = "SELECT (virt_id IS NOT NULL) AS virtual, info FROM {}.dictionaries WHERE name = %s;".format(_schema)
@@ -137,6 +149,7 @@ class Backend(db.BackendBase):
         return list(zip(*rs))[0]
 
     @pg_exc
+    @pg_conn
     def get_words(self, database):
         dict_id, virt_id = self._get_ids(database)
         del virt_id
@@ -146,6 +159,7 @@ class Backend(db.BackendBase):
         return words
 
     @pg_exc
+    @pg_conn
     def get_virtual_database(self, database):
         dict_id, virt_id = self._get_ids(database)
         del dict_id
@@ -155,6 +169,7 @@ class Backend(db.BackendBase):
         return virt_dict
 
     @pg_exc
+    @pg_conn
     def get_definitions(self, database, word):
         cur = self._cur
         stmt = "SELECT definition FROM {0}.definitions WHERE dict_id = (SELECT dict_id FROM {0}.dictionaries WHERE name = %s) AND word = %s;".format(_schema)
