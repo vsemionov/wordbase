@@ -121,29 +121,32 @@ def _command_string(body):
 def _shortcut(s):
     return Empty().addParseAction(lambda t: s)
 
+def make_grammar():
+    show_db = _keyword("DB") | _keyword("DATABASES")
+    show_strat = _keyword("STRAT") | _keyword("STRATEGIES")
+    show_info = _keyword("INFO") + _word
+    show_server = _keyword("SERVER") + Optional(_text)
 
-_show_db = _keyword("DB") | _keyword("DATABASES")
-_show_strat = _keyword("STRAT") | _keyword("STRATEGIES")
-_show_info = _keyword("INFO") + _word
-_show_server = _keyword("SERVER") + Optional(_text)
+    show_params = show_db | show_strat | show_info | show_server
 
-_show_params = _show_db | _show_strat | _show_info | _show_server
+    grammar = _command_string(_command("") + _get_reset_cmd_state_action(None))
+    grammar |= _command_string(_command("DEFINE") + _word + _word) | _command_string(_command("D", "DEFINE") + _shortcut("*") + _word) | _command_string(_command("D", "DEFINE") + _word + _word)
+    grammar |= _command_string(_command("MATCH") + _word + _word + _word) | _command_string(_command("M", "MATCH") + _shortcut("*") + _shortcut(".") + _word) | _command_string(_command("M", "MATCH") + _shortcut("*") + _word + _word) | _command_string(_command("M", "MATCH") + _word + _word + _word)
+    grammar |= _command_string(_command("SHOW") + show_params)
+    grammar |= _command_string(_command("CLIENT") + Optional(_text, default=""))
+    grammar |= _command_string(_command("STATUS") + Optional(_text)) | _command_string(_command("S", "STATUS") + Optional(_text))
+    grammar |= _command_string(_command("HELP") + Optional(_text)) | _command_string(_command("H", "HELP") + Optional(_text))
+    grammar |= _command_string(_command("QUIT") + Optional(_text)) | _command_string(_command("Q", "QUIT") + Optional(_text))
+    grammar |= _command_string(_command("OPTION") + Optional(_text)) # not supported, therefore defined liberally
+    grammar |= _command_string(_command("AUTH") + Optional(_text)) # not supported, therefore defined liberally
+    grammar |= _command_string(_command("SASLAUTH") + Optional(_text)) # not supported, therefore defined liberally
+    grammar |= _command_string(_command("SASLRESP") + Optional(_text)) # not supported, therefore defined liberally
 
-_grammar = _command_string(_command("") + _get_reset_cmd_state_action(None))
-_grammar |= _command_string(_command("DEFINE") + _word + _word) | _command_string(_command("D", "DEFINE") + _shortcut("*") + _word) | _command_string(_command("D", "DEFINE") + _word + _word)
-_grammar |= _command_string(_command("MATCH") + _word + _word + _word) | _command_string(_command("M", "MATCH") + _shortcut("*") + _shortcut(".") + _word) | _command_string(_command("M", "MATCH") + _shortcut("*") + _word + _word) | _command_string(_command("M", "MATCH") + _word + _word + _word)
-_grammar |= _command_string(_command("SHOW") + _show_params)
-_grammar |= _command_string(_command("CLIENT") + Optional(_text, default=""))
-_grammar |= _command_string(_command("STATUS") + Optional(_text)) | _command_string(_command("S", "STATUS") + Optional(_text))
-_grammar |= _command_string(_command("HELP") + Optional(_text)) | _command_string(_command("H", "HELP") + Optional(_text))
-_grammar |= _command_string(_command("QUIT") + Optional(_text)) | _command_string(_command("Q", "QUIT") + Optional(_text))
-_grammar |= _command_string(_command("OPTION") + Optional(_text)) # not supported, therefore defined liberally
-_grammar |= _command_string(_command("AUTH") + Optional(_text)) # not supported, therefore defined liberally
-_grammar |= _command_string(_command("SASLAUTH") + Optional(_text)) # not supported, therefore defined liberally
-_grammar |= _command_string(_command("SASLRESP") + Optional(_text)) # not supported, therefore defined liberally
+    grammar.parseWithTabs()
 
-_grammar.parseWithTabs()
+    return grammar
 
+_grammar = None
 
 _parser_lock = None
 
@@ -158,7 +161,9 @@ def parse_command(line):
             return False, _cmd_state
 
 def init():
-    global _parser_lock
-    _parser_lock = modules.mp().Lock()
     global logger
     logger = logging.getLogger(__name__)
+    global _parser_lock
+    _parser_lock = modules.mp().Lock()
+    global _grammar
+    _grammar = make_grammar()
