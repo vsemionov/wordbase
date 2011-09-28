@@ -1,7 +1,3 @@
-0.3:
-- redis on-demand connections
-- pgsql on-demand connections
-
 0.3.1
 - correct ttl when key already present in redis
 
