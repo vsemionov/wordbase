@@ -1,9 +1,13 @@
+Version  0.3:
+- on-demand redis connections
+- on-demand pgsql connections
+
 Version  0.2:
- - cache system
- - redis cache module
+- cache system
+- redis cache module
 
 Version  0.1.1:
- - honor unlimited concurrency
+- honor unlimited concurrency
 
 Version  0.1:
- - initial release
+- initial release
