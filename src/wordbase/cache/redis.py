@@ -105,33 +105,13 @@ class Cache(cache.CacheBase):
 
     @redis_exc
     def connect(self):
-        try:
-            for idx, db in enumerate(self._databases):
-                pool = db.connection_pool
-                conn = pool.get_connection(None)
-                conn.connect()
-                pool.release(conn)
-                logger.debug("connected to redis {}".format(idx))
-        except Exception as ex:
-            try:
-                self.close()
-            except Exception:
-                pass
-            raise ex
+        pass
 
     @redis_exc
     def close(self):
-        first_ex = None
-        for idx, db in enumerate(self._databases):
-            try:
-                pool = db.connection_pool
-                pool.disconnect()
-                logger.debug("closed redis connection {}".format(idx))
-            except Exception as ex:
-                if first_ex is None:
-                    first_ex = ex
-        if first_ex is not None:
-            raise first_ex
+        for db in self._databases:
+            pool = db.connection_pool
+            pool.disconnect()
 
     @staticmethod
     def _get_db_idx(key):
