@@ -1,17 +1,5 @@
 0.5:
-- more word-matching strategies
-
-0.6:
-- memcached cache module
-
-0.7:
-- mysql db module
-
-0.8:
-- dict/dictzip db module; see http://www.koders.com/python/fidCE921450E1A2FDA0629539F9A8DC7A25AECDD126.aspx?s=wxpython
-
-0.9:
-- windows service support
-
-1.0:
 - documentation
+
+0.5.1:
+- fix or document the following bug: segfault when a thread attempts to fetch data from pgsql after another thread previously failed to connect to pgsql; to reproduce, configure wordbase with thread mp module, stop pgsql, start wordbase, connect a client and issue "d hello" (which fails), start pgsql, connect a second client and issue "d hello"; result - the python interpreter segfaults
