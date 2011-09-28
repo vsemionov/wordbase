@@ -39,6 +39,14 @@ _servers = []
 _timeout = 0
 _ttl = 0
 
+_monitor = None
+
+
+def _init_monitor():
+    servers = [(host, port) for (host, port, db, password) in _servers]
+    del db, password
+    global _monitor
+    _monitor = cache.ServerMonitor(servers, _timeout)
 
 def configure(config):
     global _servers, _timeout, _ttl
@@ -83,6 +91,8 @@ def configure(config):
     _timeout = config.getint("timeout", 15) or None
     _ttl = config.getint("ttl", 0)
 
+    _init_monitor()
+
     global logger
     logger = logging.getLogger(__name__)
     logger.debug("initialized")
@@ -97,6 +107,18 @@ def redis_exc(func):
             logger.error(ex, exc_info=exc_info)
             raise cache.CacheError(ex)
     return wrap_redis_exc
+
+def redis_index(func):
+    def wrap_redis_index(key, *args):
+        try:
+            index = _monitor.get_server_index(key)
+            if index is None:
+                return None
+            return func(*args, index)
+        except redis.ConnectionError:
+            _monitor.notify_server_down(index)
+            return None
+    return wrap_redis_index
 
 class Cache(cache.CacheBase):
     def __init__(self):
@@ -113,19 +135,14 @@ class Cache(cache.CacheBase):
             pool = db.connection_pool
             pool.disconnect()
 
-    @staticmethod
-    def _get_db_idx(key):
-        db_idx = hash(key) % len(_servers)
-        return db_idx
-
     @redis_exc
-    def get(self, key):
-        db_idx = self.__class__._get_db_idx(key)
+    @redis_index
+    def get(self, key, index=None):
         if not _ttl:
-            db = self._databases[db_idx]
+            db = self._databases[index]
             value = db.get(key)
         else:
-            pipe = self._pipelines[db_idx]
+            pipe = self._pipelines[index]
             pipe.get(key)
             pipe.expire(key, _ttl)
             result = pipe.execute()
@@ -133,13 +150,13 @@ class Cache(cache.CacheBase):
         return value
 
     @redis_exc
-    def set(self, key, value):
-        db_idx = self.__class__._get_db_idx(key)
+    @redis_index
+    def set(self, key, value, index=None):
         if not _ttl:
-            db = self._databases[db_idx]
+            db = self._databases[index]
             db.set(key, value)
         else:
-            pipe = self._pipelines[db_idx]
+            pipe = self._pipelines[index]
             pipe.set(key, value)
             pipe.expire(key, _ttl)
             pipe.execute()

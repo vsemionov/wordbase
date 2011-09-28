@@ -24,11 +24,14 @@
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 
+import threading
+
 import debug
 
 
 class CacheError(IOError):
     pass
+
 
 class CacheBase:
     def connect(self):
@@ -49,3 +52,22 @@ class CacheBase:
 
     def __exit__(self, *args):
         self.close()
+
+
+class _HeartbeatThread(threading.Thread):
+    def __init__(self):
+        super().__init__()
+        self.daemon = True
+
+    def run(self):
+        pass
+
+class ServerMonitor():
+    def __init__(self, servers, timeout):
+        pass
+
+    def get_server_index(self, key):
+        return None
+
+    def notify_server_down(self, index):
+        pass
