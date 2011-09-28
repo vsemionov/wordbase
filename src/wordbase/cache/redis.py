@@ -88,7 +88,7 @@ def configure(config):
     if not len(_servers):
         raise ValueError("no redis connection strings specified")
 
-    _timeout = config.getint("timeout", 15) or None
+    _timeout = config.getint("timeout", 5) or None
     _ttl = config.getint("ttl", 0)
 
     _init_monitor()

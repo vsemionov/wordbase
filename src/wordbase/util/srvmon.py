@@ -34,8 +34,18 @@ import logging
 
 logger = None
 
+_enabled = False
+_interval = 0
+_timeout = 0
 
-def init():
+
+def configure(config):
+    global _enabled, _interval, _timeout
+    _enabled = config.getboolean("enable", True)
+    _interval = config.getint("interval", 1)
+    _timeout = config.getint("timeout", 5)
+    if not _timeout:
+        raise ValueError("invalid srvmon timeout value")
     global logger
     logger = logging.getLogger(__name__)
 
@@ -71,13 +81,15 @@ class _HeartbeatThread(threading.Thread):
                 # ignoring the race condition here, because it is not important
                 _log_status(self._address, status)
             self._statuses[self._index] = status
-            time.sleep(1.0)
+            time.sleep(_interval)
 
 class ServerMonitor():
     def __init__(self, servers, timeout):
-        timeout = timeout or 15
+        timeout = timeout or _timeout
         self._servers = list(servers)
         self._statuses = [True for server in servers]
+        if not _enabled:
+            return
         self._threads = [_HeartbeatThread(self._statuses, index, server, timeout) for (index, server) in enumerate(servers)]
         for thread in self._threads:
             thread.start()
@@ -94,5 +106,7 @@ class ServerMonitor():
         return server_index
 
     def notify_server_down(self, index):
+        if not _enabled:
+            return
         _log_status(self._servers[index], False)
         self._statuses[index] = False

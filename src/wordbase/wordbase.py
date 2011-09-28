@@ -140,7 +140,8 @@ def server_control(config, daemon_cmd):
     if daemon_cmd in (None, start_cmd, restart_cmd):
         random.seed()
 
-        util.srvmon.init()
+        smconfig = config["srvmon"]
+        util.srvmon.configure(smconfig)
 
         modules.init(config)
 
