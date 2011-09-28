@@ -44,7 +44,7 @@ import master
 
 
 PROGRAM_NAME = "wordbase"
-PROGRAM_VERSION = "0.3"
+PROGRAM_VERSION = "0.3.1"
 
 
 script_name = os.path.basename(__file__)
