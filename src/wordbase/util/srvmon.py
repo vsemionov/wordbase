@@ -77,6 +77,9 @@ class _HeartbeatThread(threading.Thread):
                 status = True
             except socket.error:
                 status = False
+            except Exception:
+                logger.exception("unhandled exception; heartbeat thread terminating")
+                return
             if self._statuses[self._index] != status:
                 # ignoring the race condition here, because it is not important
                 _log_status(self._address, status)
