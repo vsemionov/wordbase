@@ -1,16 +1,19 @@
-Version  0.3.1:
+version  0.4:
+- configurable cache server monitoring and failover/failback
+
+version  0.3.1:
 - touch TTL when getting data from cache
 
-Version  0.3:
+version  0.3:
 - on-demand redis connections
 - on-demand pgsql connections
 
-Version  0.2:
+version  0.2:
 - cache system
 - redis cache module
 
-Version  0.1.1:
+version  0.1.1:
 - honor unlimited concurrency
 
-Version  0.1:
+version  0.1:
 - initial release
