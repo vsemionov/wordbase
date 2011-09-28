@@ -25,6 +25,10 @@
 
 
 import threading
+import itertools
+import socket
+import time
+import random
 
 import debug
 
@@ -55,19 +59,45 @@ class CacheBase:
 
 
 class _HeartbeatThread(threading.Thread):
-    def __init__(self):
+    def __init__(self, statuses, index, address, timeout):
         super().__init__()
         self.daemon = True
 
+        self._statuses = statuses
+        self._index = index
+        self._address = address
+        self._timeout = timeout
+
     def run(self):
-        pass
+        init_sleep = random.random() * 1.0
+        time.sleep(init_sleep)
+        while True:
+            try:
+                sock = socket.create_connection(self._address, self._timeout)
+                sock.close()
+                status = True
+            except socket.error:
+                status = False
+            self._statuses[self._index] = status
+            time.sleep(1.0)
 
 class ServerMonitor():
     def __init__(self, servers, timeout):
-        pass
+        timeout = timeout or 15
+        self._servers = list(servers)
+        self._statuses = [True for server in servers]
+        del server
 
     def get_server_index(self, key):
-        return None
+        compressor = itertools.compress(self._servers, self._statuses)
+        avail_list = list(compressor)
+        navail = len(avail_list)
+        if navail == 0:
+            return None
+        avail_index = hash(key) % navail
+        server = avail_list[avail_index]
+        server_index = self._servers.index(server)
+        return server_index
 
     def notify_server_down(self, index):
-        pass
+        self._statuses[index] = False
