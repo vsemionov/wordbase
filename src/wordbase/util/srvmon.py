@@ -40,6 +40,13 @@ def init():
     logger = logging.getLogger(__name__)
 
 
+def _log_status(address, status):
+    host, port = address
+    if status:
+        logger.info("server {}:{} is up".format(host, port))
+    else:
+        logger.warning("server {}:{} is down".format(host, port))
+
 class _HeartbeatThread(threading.Thread):
     def __init__(self, statuses, index, address, timeout):
         super().__init__()
@@ -62,9 +69,7 @@ class _HeartbeatThread(threading.Thread):
                 status = False
             if self._statuses[self._index] != status:
                 # ignoring the race condition here, because it is not important
-                host, port = self._address
-                label = "up" if status else "down"
-                logger.info("server {}:{} is {}".format(host, port, label))
+                _log_status(self._address, status)
             self._statuses[self._index] = status
             time.sleep(1.0)
 
@@ -86,4 +91,5 @@ class ServerMonitor():
         return server_index
 
     def notify_server_down(self, index):
+        _log_status(self._servers[index], False)
         self._statuses[index] = False
