@@ -73,7 +73,6 @@ class ServerMonitor():
         timeout = timeout or 15
         self._servers = list(servers)
         self._statuses = [True for server in servers]
-        del server
 
     def get_server_index(self, key):
         compressor = itertools.compress(self._servers, self._statuses)

@@ -45,7 +45,6 @@ _monitor = None
 
 def _init_monitor():
     servers = [(host, port) for (host, port, db, password) in _servers]
-    del db, password
     global _monitor
     _monitor = util.srvmon.ServerMonitor(servers, _timeout)
 
@@ -115,7 +114,7 @@ def redis_index(func):
             index = _monitor.get_server_index(key)
             if index is None:
                 return None
-            return func(*args, index)
+            return func(key, *args, index=index)
         except redis.ConnectionError:
             _monitor.notify_server_down(index)
             return None
