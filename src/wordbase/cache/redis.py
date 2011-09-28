@@ -121,8 +121,15 @@ class Cache(cache.CacheBase):
     @redis_exc
     def get(self, key):
         db_idx = self.__class__._get_db_idx(key)
-        db = self._databases[db_idx]
-        value = db.get(key)
+        if not _ttl:
+            db = self._databases[db_idx]
+            value = db.get(key)
+        else:
+            pipe = self._pipelines[db_idx]
+            pipe.get(key)
+            pipe.expire(key, _ttl)
+            result = pipe.execute()
+            value = result[0]
         return value
 
     @redis_exc
