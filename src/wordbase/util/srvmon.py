@@ -78,6 +78,9 @@ class ServerMonitor():
         timeout = timeout or 15
         self._servers = list(servers)
         self._statuses = [True for server in servers]
+        self._threads = [_HeartbeatThread(self._statuses, index, server, timeout) for (index, server) in enumerate(servers)]
+        for thread in self._threads:
+            thread.start()
 
     def get_server_index(self, key):
         compressor = itertools.compress(self._servers, self._statuses)
