@@ -1,3 +1,6 @@
+Version  0.3.1:
+- touch TTL when getting data from cache
+
 Version  0.3:
 - on-demand redis connections
 - on-demand pgsql connections
