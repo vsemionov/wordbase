@@ -37,6 +37,7 @@ import daemon
 
 import debug
 import log
+import util.srvmon
 import modules
 import match
 import core
@@ -138,6 +139,8 @@ def server_control(config, daemon_cmd):
 
     if daemon_cmd in (None, start_cmd, restart_cmd):
         random.seed()
+
+        util.srvmon.init()
 
         modules.init(config)
 

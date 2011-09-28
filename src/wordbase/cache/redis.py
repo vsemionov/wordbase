@@ -31,6 +31,7 @@ import redis
 
 import debug
 import cache
+import util.srvmon
 
 
 logger = None
@@ -46,7 +47,7 @@ def _init_monitor():
     servers = [(host, port) for (host, port, db, password) in _servers]
     del db, password
     global _monitor
-    _monitor = cache.ServerMonitor(servers, _timeout)
+    _monitor = util.srvmon.ServerMonitor(servers, _timeout)
 
 def configure(config):
     global _servers, _timeout, _ttl

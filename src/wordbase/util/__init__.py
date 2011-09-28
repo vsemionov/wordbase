@@ -22,30 +22,3 @@
 # CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
 # OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-
-
-import debug
-
-
-class CacheError(IOError):
-    pass
-
-class CacheBase:
-    def connect(self):
-        debug.not_impl(self)
-
-    def close(self):
-        debug.not_impl(self)
-
-    def get(self, key):
-        debug.not_impl(self)
-
-    def set(self, key, value):
-        debug.not_impl(self)
-
-    def __enter__(self):
-        self.connect()
-        return self
-
-    def __exit__(self, *args):
-        self.close()
