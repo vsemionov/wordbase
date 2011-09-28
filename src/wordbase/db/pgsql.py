@@ -27,7 +27,7 @@
 import sys
 import logging
 
-import psycopg2
+import psycopg2 as dbapi
 
 import debug
 import db
@@ -64,7 +64,7 @@ def pg_exc(func):
     def wrap_pg_exc(*args):
         try:
             return func(*args)
-        except (psycopg2.Error, psycopg2.Warning) as ex:
+        except (dbapi.Error, dbapi.Warning) as ex:
             exc_info = sys.exc_info() if debug.enabled else None
             logger.error(ex, exc_info=exc_info)
             raise db.BackendError(ex)
@@ -84,7 +84,7 @@ class Backend(db.BackendBase):
 
     def _connect_real(self):
         self.close()
-        self._conn = psycopg2.connect(host=_host, port=_port, user=_user, password=_password, database=_database)
+        self._conn = dbapi.connect(host=_host, port=_port, user=_user, password=_password, database=_database)
         self._conn.autocommit = True
         self._cur = self._conn.cursor()
         logger.debug("connected to pgsql")
