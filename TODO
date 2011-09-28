@@ -1,6 +1,7 @@
 0.3:
+- redis on-demand connections
+- pgsql on-demand connections
 - replace psycopg2 with pg8000 and enable socket timeout?
-- redis on-demand connections and connection pooling
 
 0.4:
 - some sort of failover after a redis server fails and fallback after recovery; if all servers fail, the cache should fail silently (without disconnecting the client)
