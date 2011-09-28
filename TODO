@@ -1,6 +1,3 @@
-0.4:
-- (?) some sort of failover after a redis server fails and fallback after recovery; if all servers fail, the cache should fail silently (without disconnecting the client)
-
 0.5:
 - more word-matching strategies
 
