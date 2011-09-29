@@ -111,5 +111,6 @@ class ServerMonitor():
     def notify_server_down(self, index):
         if not _enabled:
             return
-        _log_status(self._servers[index], False)
+        if self._statuses[index]:
+            _log_status(self._servers[index], False)
         self._statuses[index] = False
