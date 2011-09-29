@@ -1,5 +1,2 @@
 0.5:
 - documentation
-
-0.5.1:
-- fix or document the following bug: segfault when a thread attempts to fetch data from pgsql after another thread previously failed to connect to pgsql; to reproduce, configure wordbase with thread mp module, stop pgsql, start wordbase, connect a client and issue "d hello" (which fails), start pgsql, connect a second client and issue "d hello"; result - the python interpreter segfaults
