@@ -30,7 +30,7 @@ import sys
 import getopt
 import configparser
 
-import psycopg2
+import psycopg2 as dbapi
 
 
 _host = _port = _user = _password = _database = _schema = None
@@ -89,7 +89,7 @@ def get_pgsql_params(fmt, minargs, maxargs, usage):
     return options, args
 
 def process_pgsql_task(task, *args):
-    conn = psycopg2.connect(host=_host, port=_port, user=_user, password=_password, database=_database)
+    conn = dbapi.connect(host=_host, port=_port, user=_user, password=_password, database=_database)
 
     try:
         conn.autocommit = False
