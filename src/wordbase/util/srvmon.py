@@ -98,14 +98,17 @@ class ServerMonitor():
             thread.start()
 
     def get_server_index(self, key):
-        compressor = itertools.compress(self._servers, self._statuses)
-        avail_list = list(compressor)
-        navail = len(avail_list)
-        if navail == 0:
-            return None
-        avail_index = hash(key) % navail
-        server = avail_list[avail_index]
-        server_index = self._servers.index(server)
+        key_hash = hash(key)
+        server_index = key_hash % len(self._servers)
+        if not self._statuses[server_index]:
+            compressor = itertools.compress(self._servers, self._statuses)
+            avail_list = list(compressor)
+            navail = len(avail_list)
+            if navail == 0:
+                return None
+            avail_index = key_hash % navail
+            server = avail_list[avail_index]
+            server_index = self._servers.index(server)
         return server_index
 
     def notify_server_down(self, index):
