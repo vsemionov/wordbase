@@ -1,4 +1,0 @@
-syntax: glob
-.project
-.pydevproject
-**/__pycache__/**
